@@ -54,7 +54,7 @@ final class RenderPayloadType extends Type
         }
 
         /** @var array{message: array{key: string, params: array<string, scalar>}, info: list<array{key: string, params: array<string, scalar>}>} $data */
-        $data = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        $data = json_decode($value, true, flags: JSON_THROW_ON_ERROR);
 
         return new RenderPayload(
             new RenderLine($data['message']['key'], $data['message']['params']),

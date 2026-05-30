@@ -61,7 +61,7 @@ final class ChangesetType extends Type
         }
 
         /** @var list<array{field: string, old: mixed, new: mixed, redacted: bool}> $rows */
-        $rows = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        $rows = json_decode($value, true, flags: JSON_THROW_ON_ERROR);
 
         $fields = array_map(
             static fn (array $r): FieldChange => $r['redacted']
