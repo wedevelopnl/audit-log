@@ -41,7 +41,7 @@ class AuditRecordEntity implements AuditRecord
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     public private(set) DateTimeImmutable $occurredAt;
 
-    #[ORM\Column(type: Types::STRING, length: 64, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     public private(set) ?string $actorId;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
