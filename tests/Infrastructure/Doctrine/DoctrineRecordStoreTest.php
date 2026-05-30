@@ -41,7 +41,7 @@ final class DoctrineRecordStoreTest extends TestCase
             actorLabel: 'Jan',
             subjectClass: stdClass::class,
             subjectId: 'user-1',
-            subjectLabel: 'jan@pouw.nl',
+            subjectLabel: 'jan@example.com',
             ipAddress: '203.0.113.7',
             changes: new Changeset(FieldChange::redacted('password'), FieldChange::of('email', 'a@x', 'b@x')),
             data: ['ticket' => 42],
