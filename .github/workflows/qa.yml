@@ -9,7 +9,7 @@ jobs:
   qa:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -19,7 +19,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress
+        run: composer update --no-interaction --no-progress
 
       - name: Coding standards
         run: composer cs-check
