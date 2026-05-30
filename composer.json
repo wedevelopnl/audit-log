@@ -54,7 +54,7 @@
         "phpstan": "phpstan analyse --memory-limit=512M",
         "rector-check": "rector process --dry-run",
         "deptrac": "deptrac analyse --config-file=deptrac.yaml",
-        "igor": "igor",
+        "igor": "igor-php --no-agent .",
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-text",
         "infection": [

@@ -33,6 +33,9 @@ jobs:
       - name: Architecture boundaries
         run: composer deptrac
 
+      - name: Worker-mode safety
+        run: composer igor
+
       - name: Tests
         run: composer test
 
