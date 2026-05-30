@@ -6,6 +6,7 @@ namespace WeDevelop\AuditLog\Tests\Infrastructure\Doctrine;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -97,17 +98,85 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame('Jan', $actors[1]->label);
     }
 
-    private function persist(string $id, string $code, string $actorId, string $actorLabel, string $at): void
+    public function testFiltersByActor(): void
     {
+        $target = '0190a8e0-0002-7000-8000-000000000002';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $this->persist($target, 'user.deleted', 'actor-2', 'Ana', '2026-05-02T00:00:00+00:00');
+
+        $page = $this->reader->page(new AuditQuery(actorId: 'actor-2'));
+
+        self::assertSame(1, $page->total);
+        self::assertSame($target, $page->entries[0]->id);
+    }
+
+    public function testFiltersBySubjectClassAndIdIndependently(): void
+    {
+        $target = '0190a8e0-0002-7000-8000-000000000002';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00', subjectClass: stdClass::class, subjectId: 'user-1');
+        $this->persist($target, 'invoice.paid', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00', subjectClass: Exception::class, subjectId: 'invoice-9');
+
+        // subjectClass alone selects the one record of that class...
+        $byClass = $this->reader->page(new AuditQuery(subjectClass: Exception::class));
+        self::assertSame(1, $byClass->total);
+        self::assertSame($target, $byClass->entries[0]->id);
+
+        // ...and subjectId is bound to subject_id, not subject_class.
+        $byId = $this->reader->page(new AuditQuery(subjectId: 'invoice-9'));
+        self::assertSame(1, $byId->total);
+        self::assertSame($target, $byId->entries[0]->id);
+    }
+
+    public function testFiltersByChannel(): void
+    {
+        $target = '0190a8e0-0002-7000-8000-000000000002';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00', channel: AuditChannel::Ui);
+        $this->persist($target, 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00', channel: AuditChannel::Api);
+
+        $page = $this->reader->page(new AuditQuery(channel: AuditChannel::Api));
+
+        self::assertSame(1, $page->total);
+        self::assertSame($target, $page->entries[0]->id);
+    }
+
+    public function testFiltersByInclusiveFromToWindow(): void
+    {
+        $inWindow = '0190a8e0-0002-7000-8000-000000000002';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $this->persist($inWindow, 'user.deleted', 'actor-1', 'Jan', '2026-05-10T00:00:00+00:00');
+        $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-1', 'Jan', '2026-05-20T00:00:00+00:00');
+
+        // The window boundary equals the in-window record's timestamp, pinning
+        // from as >= (inclusive lower) and to as <= (inclusive upper).
+        $page = $this->reader->page(new AuditQuery(
+            from: new DateTimeImmutable('2026-05-10T00:00:00+00:00'),
+            to: new DateTimeImmutable('2026-05-15T00:00:00+00:00'),
+        ));
+
+        self::assertSame(1, $page->total);
+        self::assertSame($inWindow, $page->entries[0]->id);
+    }
+
+    /** @param class-string $subjectClass */
+    private function persist(
+        string $id,
+        string $code,
+        string $actorId,
+        string $actorLabel,
+        string $at,
+        AuditChannel $channel = AuditChannel::Ui,
+        string $subjectClass = stdClass::class,
+        string $subjectId = 'user-1',
+    ): void {
         $this->store->add(new NewAuditRecord(
             id: $id,
             code: $code,
-            channel: AuditChannel::Ui,
+            channel: $channel,
             occurredAt: new DateTimeImmutable($at),
             actorId: $actorId,
             actorLabel: $actorLabel,
-            subjectClass: stdClass::class,
-            subjectId: 'user-1',
+            subjectClass: $subjectClass,
+            subjectId: $subjectId,
             subjectLabel: null,
             ipAddress: null,
             changes: null,
