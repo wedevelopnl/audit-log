@@ -5,6 +5,8 @@
     "license": "BSD-3-Clause",
     "require": {
         "php": ">=8.5",
+        "doctrine/dbal": "^4.0",
+        "doctrine/orm": "^3.6",
         "psr/clock": "^1.0",
         "psr/log": "^3.0"
     },
