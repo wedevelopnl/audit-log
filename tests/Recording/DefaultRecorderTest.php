@@ -80,9 +80,9 @@ final class DefaultRecorderTest extends TestCase
     {
         $store = new InMemoryRecordStore();
         $this->recorder($store, null, 'SHOULD-NOT-BE-USED', new Origin(AuditChannel::Ui, null), 'rec-2')
-            ->record(new UserDeletedEvent('user-1', 'jan@pouw.nl'));
+            ->record(new UserDeletedEvent('user-1', 'jan@example.com'));
 
-        self::assertSame('jan@pouw.nl', $store->records[0]->subjectLabel);
+        self::assertSame('jan@example.com', $store->records[0]->subjectLabel);
         self::assertNull($store->records[0]->actorId);
         self::assertNull($store->records[0]->actorLabel);
     }
