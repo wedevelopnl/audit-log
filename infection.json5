@@ -1,0 +1,15 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "tmpDir": "var/infection",
+    "logs": {
+        "text": "var/infection/infection.log"
+    },
+    "minMsi": 95,
+    "minCoveredMsi": 95,
+    "mutators": {
+        "@default": true
+    }
+}
