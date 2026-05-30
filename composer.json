@@ -20,7 +20,8 @@
         "friendsofphp/php-cs-fixer": "^3.95",
         "rector/rector": "^2.4",
         "deptrac/deptrac": "^4.6",
-        "infection/infection": "^0.33"
+        "infection/infection": "^0.33",
+        "symfony/cache": "^7.2"
     },
     "autoload": {
         "psr-4": { "WeDevelop\\AuditLog\\": "src/" }
@@ -38,7 +39,7 @@
     "scripts": {
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
-        "phpstan": "phpstan analyse",
+        "phpstan": "phpstan analyse --memory-limit=512M",
         "rector-check": "rector process --dry-run",
         "deptrac": "deptrac analyse --config-file=deptrac.yaml",
         "test": "phpunit",
