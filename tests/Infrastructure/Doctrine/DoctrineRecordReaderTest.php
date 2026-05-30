@@ -1,0 +1,103 @@
+<?php
+
+declare(strict_types=1);
+
+namespace WeDevelop\AuditLog\Tests\Infrastructure\Doctrine;
+
+use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
+use Override;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+use stdClass;
+use WeDevelop\AuditLog\Event\AuditChannel;
+use WeDevelop\AuditLog\Event\RenderLine;
+use WeDevelop\AuditLog\Event\RenderPayload;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordReader;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordStore;
+use WeDevelop\AuditLog\Reading\AuditActor;
+use WeDevelop\AuditLog\Reading\AuditEntry;
+use WeDevelop\AuditLog\Reading\AuditPage;
+use WeDevelop\AuditLog\Reading\AuditQuery;
+use WeDevelop\AuditLog\Recording\NewAuditRecord;
+use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
+
+#[CoversClass(DoctrineRecordReader::class)]
+#[CoversClass(AuditEntry::class)]
+#[CoversClass(AuditActor::class)]
+#[CoversClass(AuditPage::class)]
+#[CoversClass(AuditQuery::class)]
+final class DoctrineRecordReaderTest extends TestCase
+{
+    private EntityManagerInterface $em;
+    private DoctrineRecordStore $store;
+    private DoctrineRecordReader $reader;
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->em = EntityManagerFactory::createWithSchema();
+        $this->store = new DoctrineRecordStore($this->em);
+        $this->reader = new DoctrineRecordReader($this->em);
+    }
+
+    public function testFiltersByCodeAndPaginatesNewestFirst(): void
+    {
+        $newest = '0190a8e0-0003-7000-8000-000000000003';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.created', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00');
+        $this->persist($newest, 'user.deleted', 'actor-2', 'Ana', '2026-05-03T00:00:00+00:00');
+
+        $page = $this->reader->page(new AuditQuery(code: 'user.deleted', perPage: 1));
+
+        self::assertSame(2, $page->total);
+        self::assertSame(2, $page->pageCount);
+        self::assertCount(1, $page->entries);
+        self::assertSame($newest, $page->entries[0]->id);
+    }
+
+    public function testFiltersByDateRange(): void
+    {
+        $recent = '0190a8e0-0002-7000-8000-000000000002';
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $this->persist($recent, 'user.deleted', 'actor-1', 'Jan', '2026-06-01T00:00:00+00:00');
+
+        $page = $this->reader->page(new AuditQuery(from: new DateTimeImmutable('2026-05-15T00:00:00+00:00')));
+
+        self::assertSame(1, $page->total);
+        self::assertSame($recent, $page->entries[0]->id);
+    }
+
+    public function testListsDistinctActorsSortedByLabel(): void
+    {
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-2', 'Ana', '2026-05-01T00:00:00+00:00');
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00');
+        $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-1', 'Jan', '2026-05-03T00:00:00+00:00');
+
+        $actors = $this->reader->actors();
+
+        self::assertCount(2, $actors);
+        self::assertSame('Ana', $actors[0]->label);
+        self::assertSame('Jan', $actors[1]->label);
+    }
+
+    private function persist(string $id, string $code, string $actorId, string $actorLabel, string $at): void
+    {
+        $this->store->add(new NewAuditRecord(
+            id: $id,
+            code: $code,
+            channel: AuditChannel::Ui,
+            occurredAt: new DateTimeImmutable($at),
+            actorId: $actorId,
+            actorLabel: $actorLabel,
+            subjectClass: stdClass::class,
+            subjectId: 'user-1',
+            subjectLabel: null,
+            ipAddress: null,
+            changes: null,
+            data: null,
+            render: new RenderPayload(new RenderLine($code)),
+        ));
+        $this->em->flush();
+    }
+}
