@@ -1,0 +1,6 @@
+/vendor/
+/var/
+/composer.phar
+.phpunit.cache/
+.php-cs-fixer.cache
+coverage.xml

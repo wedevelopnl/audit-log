@@ -1,0 +1,37 @@
+name: QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Coding standards
+        run: composer cs-check
+
+      - name: Static analysis
+        run: composer phpstan
+
+      - name: Override attributes
+        run: composer rector-check
+
+      - name: Architecture boundaries
+        run: composer deptrac
+
+      - name: Tests
+        run: composer test
