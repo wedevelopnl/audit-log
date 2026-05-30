@@ -4,24 +4,26 @@ deptrac:
     layers:
         - name: Event
           collectors:
-            - type: directory
-              value: src/Event/.*
+            - { type: directory, value: src/Event/.* }
         - name: Recording
           collectors:
-            - type: directory
-              value: src/Recording/.*
+            - { type: directory, value: src/Recording/.* }
         - name: Record
           collectors:
-            - type: directory
-              value: src/Record/.*
+            - { type: directory, value: src/Record/.* }
         - name: Reading
           collectors:
-            - type: directory
-              value: src/Reading/.*
-        - name: Bridge
+            - { type: directory, value: src/Reading/.* }
+        - name: InfraDoctrine
           collectors:
-            - type: directory
-              value: src/Bridge/.*
+            - { type: directory, value: src/Infrastructure/Doctrine/.* }
+        - name: InfraSymfony
+          collectors:
+            - { type: directory, value: src/Infrastructure/Symfony/.* }
+        - name: Bundle
+          collectors:
+            - { type: directory, value: src/DependencyInjection/.* }
+            - { type: classNameRegex, value: /AuditLogBundle$/ }
     ruleset:
         Event: ~
         Record:
@@ -31,8 +33,20 @@ deptrac:
         Reading:
             - Event
             - Record
-        Bridge:
+        InfraDoctrine:
             - Event
             - Recording
             - Record
             - Reading
+        InfraSymfony:
+            - Event
+            - Recording
+            - Record
+            - Reading
+        Bundle:
+            - Event
+            - Recording
+            - Record
+            - Reading
+            - InfraDoctrine
+            - InfraSymfony
