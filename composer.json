@@ -2,7 +2,7 @@
     "name": "wedevelopnl/audit-log",
     "description": "Immutable, self-contained audit trail for Symfony and Doctrine.",
     "type": "library",
-    "license": "proprietary",
+    "license": "BSD-3-Clause",
     "require": {
         "php": ">=8.5",
         "psr/clock": "^1.0",
