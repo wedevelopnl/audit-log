@@ -19,6 +19,7 @@ use WeDevelop\AuditLog\Recording\Actor;
 use WeDevelop\AuditLog\Recording\DefaultRecorder;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Recording\Origin;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\MinimalAuditEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserDeletedEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserPasswordChangedEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserRoleChangedEvent;
@@ -59,8 +60,20 @@ final class DefaultRecorderTest extends TestCase
         self::assertSame('203.0.113.7', $record->ipAddress);
         self::assertNotNull($record->changes);
         self::assertSame('role', $record->changes->fields[0]->field);
+        self::assertSame('member', $record->changes->fields[0]->old);
         self::assertSame('admin', $record->changes->fields[0]->new);
+        self::assertFalse($record->changes->fields[0]->redacted);
         self::assertSame('user.role_changed', $record->render->message->translationKey);
+    }
+
+    public function testAnEventWithoutASubjectRecordsNullSubjectFields(): void
+    {
+        $store = new InMemoryRecordStore();
+        $this->recorder($store, new Actor('actor-1', 'Jan'), null, new Origin(AuditChannel::Console, null), 'rec-4')
+            ->record(new MinimalAuditEvent());
+
+        self::assertNull($store->records[0]->subjectClass);
+        self::assertNull($store->records[0]->subjectId);
     }
 
     public function testEventProvidedSubjectLabelShortCircuitsTheLabeller(): void

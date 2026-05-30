@@ -7,6 +7,8 @@ namespace WeDevelop\AuditLog\Tests\Event;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use WeDevelop\AuditLog\Event\AbstractAuditEvent;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\CustomMessageKeyEvent;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\MinimalAuditEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserRoleChangedEvent;
 
 #[CoversClass(AbstractAuditEvent::class)]
@@ -32,5 +34,26 @@ final class AbstractAuditEventTest extends TestCase
     public function testDataDefaultsToNull(): void
     {
         self::assertNull(new UserRoleChangedEvent('user-1', 'member', 'admin')->data());
+    }
+
+    public function testUnoverriddenDefaultsAreSafe(): void
+    {
+        $event = new MinimalAuditEvent();
+
+        self::assertNull($event->subject());
+        self::assertNull($event->changes());
+        self::assertNull($event->data());
+
+        $payload = $event->render();
+        self::assertSame('minimal.event', $payload->message->translationKey);
+        self::assertSame([], $payload->message->parameters);
+        self::assertSame([], $payload->info);
+    }
+
+    public function testMessageKeyOverrideShapesTheRenderedTranslationKey(): void
+    {
+        $payload = new CustomMessageKeyEvent()->render();
+
+        self::assertSame('custom.message_key', $payload->message->translationKey);
     }
 }
