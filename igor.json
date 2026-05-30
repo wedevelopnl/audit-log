@@ -1,0 +1,8 @@
+{
+  "exclude": ["tests", "var"],
+  "safe_namespaces": [
+    "Symfony\\",
+    "Doctrine\\"
+  ],
+  "verbose": false
+}
