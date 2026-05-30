@@ -1,0 +1,38 @@
+deptrac:
+    paths:
+        - ./src
+    layers:
+        - name: Event
+          collectors:
+            - type: directory
+              value: src/Event/.*
+        - name: Recording
+          collectors:
+            - type: directory
+              value: src/Recording/.*
+        - name: Record
+          collectors:
+            - type: directory
+              value: src/Record/.*
+        - name: Reading
+          collectors:
+            - type: directory
+              value: src/Reading/.*
+        - name: Bridge
+          collectors:
+            - type: directory
+              value: src/Bridge/.*
+    ruleset:
+        Event: ~
+        Record:
+            - Event
+        Recording:
+            - Event
+        Reading:
+            - Event
+            - Record
+        Bridge:
+            - Event
+            - Recording
+            - Record
+            - Reading
