@@ -7,9 +7,8 @@ namespace WeDevelop\AuditLog\Recording;
 use WeDevelop\AuditLog\Event\Subject;
 
 /**
- * Produces a display label for the live subject, snapshotted at the moment so
- * the trail stays readable after the subject is deleted. Returns null when no
- * label can be resolved.
+ * Snapshots a display label for the subject at record time, so the trail
+ * survives the subject's deletion.
  */
 interface SubjectLabeller
 {

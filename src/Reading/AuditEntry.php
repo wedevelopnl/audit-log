@@ -10,10 +10,6 @@ use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Record\AuditRecord;
 
-/**
- * A detached, immutable view of a stored record returned by the reader. Safe to
- * pass around: carries no persistence handle.
- */
 final readonly class AuditEntry implements AuditRecord
 {
     /** @param array<string, mixed>|null $data */

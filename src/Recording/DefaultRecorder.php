@@ -9,10 +9,6 @@ use Psr\Clock\ClockInterface;
 use WeDevelop\AuditLog\Event\AuditEvent;
 use WeDevelop\AuditLog\Event\ProvidesSubjectLabel;
 
-/**
- * The moment, made concrete: resolves the ambient strands (time, actor, origin,
- * subject label), freezes them with the event's domain facts, and appends once.
- */
 final readonly class DefaultRecorder implements Recorder
 {
     public function __construct(

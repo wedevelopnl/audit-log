@@ -11,8 +11,7 @@ use WeDevelop\AuditLog\Event\AuditChannel;
 use function sprintf;
 
 /**
- * Filter and pagination criteria for reading the trail. All filters are
- * optional and combine with AND.
+ * All filters are optional and combine with AND.
  */
 final readonly class AuditQuery
 {
