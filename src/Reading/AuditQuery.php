@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace WeDevelop\AuditLog\Reading;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use WeDevelop\AuditLog\Event\AuditChannel;
+
+use function sprintf;
 
 /**
  * Filter and pagination criteria for reading the trail. All filters are
@@ -25,5 +28,12 @@ final readonly class AuditQuery
         public int $page = 1,
         public int $perPage = 50,
     ) {
+        if ($page < 1) {
+            throw new InvalidArgumentException(sprintf('Page must be 1 or greater, got %d.', $page));
+        }
+
+        if ($perPage < 1) {
+            throw new InvalidArgumentException(sprintf('Per page must be 1 or greater, got %d.', $perPage));
+        }
     }
 }

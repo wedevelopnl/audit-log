@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace WeDevelop\AuditLog\Reading;
 
+use InvalidArgumentException;
+
+use function sprintf;
+
 /**
  * A page of audit entries plus the metadata needed to paginate.
  */
@@ -18,6 +22,10 @@ final readonly class AuditPage
         public int $perPage,
         public int $total,
     ) {
+        if ($perPage < 1) {
+            throw new InvalidArgumentException(sprintf('Per page must be 1 or greater, got %d.', $perPage));
+        }
+
         $this->pageCount = max(1, (int) ceil($this->total / $this->perPage));
     }
 }
