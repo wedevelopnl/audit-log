@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace WeDevelop\AuditLog\Recording;
 
 /**
- * Resolves the acting principal from ambient state. Implementations MUST read
- * the principal live, at call time (worker mode); they capture no state.
+ * Resolves the acting principal from ambient state.
  */
 interface ActorResolver
 {

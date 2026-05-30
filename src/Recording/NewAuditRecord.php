@@ -10,8 +10,7 @@ use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\RenderPayload;
 
 /**
- * The frozen result the recorder assembles and hands to the store. Write-input
- * only; the durable read shape is Record\AuditRecord.
+ * Write-input only; the durable read shape is Record\AuditRecord.
  */
 final readonly class NewAuditRecord
 {

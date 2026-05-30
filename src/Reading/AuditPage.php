@@ -8,9 +8,6 @@ use InvalidArgumentException;
 
 use function sprintf;
 
-/**
- * A page of audit entries plus the metadata needed to paginate.
- */
 final readonly class AuditPage
 {
     public int $pageCount;

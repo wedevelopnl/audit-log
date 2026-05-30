@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace WeDevelop\AuditLog\Reading;
 
 /**
- * Reads the trail: a filtered, paginated page of entries, and the distinct
- * actors present (for filter option lists).
+ * actors() returns the distinct actors present in the trail, for building
+ * filter option lists.
  */
 interface RecordReader
 {

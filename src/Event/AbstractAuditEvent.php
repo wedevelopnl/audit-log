@@ -7,9 +7,9 @@ namespace WeDevelop\AuditLog\Event;
 use Override;
 
 /**
- * Base for concrete audit events. A subclass must implement code(); everything
- * else has a safe default. Override parameters()/additionalInfo() to shape the
- * frozen render payload, and subject()/changes()/data() to add detail.
+ * A subclass need only implement code(); every other method has a safe default.
+ * Override messageKey()/parameters()/additionalInfo() to shape what is rendered,
+ * and subject()/changes()/data() to add detail.
  */
 abstract readonly class AbstractAuditEvent implements AuditEvent
 {

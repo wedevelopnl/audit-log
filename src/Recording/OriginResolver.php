@@ -6,7 +6,7 @@ namespace WeDevelop\AuditLog\Recording;
 
 /**
  * Resolves the channel and network address of the act from the runtime
- * entrypoint, live at call time.
+ * entrypoint.
  */
 interface OriginResolver
 {

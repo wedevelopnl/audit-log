@@ -9,10 +9,6 @@ use WeDevelop\AuditLog\Event\AuditChannel;
 use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\RenderPayload;
 
-/**
- * The immutable read shape of a stored record. No mutators anywhere: a record
- * never changes after it is written.
- */
 interface AuditRecord
 {
     public string $id { get; }
