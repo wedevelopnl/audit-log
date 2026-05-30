@@ -19,3 +19,11 @@ enforce core ↛ `Bridge`.
 
 The core is portable and fast to test; persistence and wiring are swappable; one
 architectural boundary to maintain.
+
+The `Event` layer also serves as the shared kernel. Vocabulary referenced across
+layers lives here because `Event` is the only layer that `Record`, `Recording`,
+and `Reading` may all depend on. `AuditChannel` is the worked example: it is
+resolved at record time from `Origin` (`Recording`), yet it also appears on the
+`Record` and `Reading` types, so any other placement would force an illegal
+upward dependency. New cross-cutting vocabulary belongs in `Event` only when more
+than one layer genuinely references it — not by default.
