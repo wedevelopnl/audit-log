@@ -1,5 +1,6 @@
 /vendor/
 /var/
+/composer.lock
 /composer.phar
 .phpunit.cache/
 .php-cs-fixer.cache
