@@ -1,6 +1,6 @@
 # 6. Framework-free core, framework in bridges
 
-- Status: Accepted
+- Status: Superseded by ADR-0009
 - Date: 2026-05-30
 
 ## Context
