@@ -54,6 +54,22 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame(2, $page->pageCount);
         self::assertCount(1, $page->entries);
         self::assertSame($newest, $page->entries[0]->id);
+        // The reader returns detached DTOs, never the EM-managed entity, so the
+        // result carries no persistence handle out of the read boundary.
+        self::assertFalse($this->em->contains($page->entries[0]));
+    }
+
+    public function testPaginatesToTheSecondPageSkippingNewerEntries(): void
+    {
+        $oldest = '0190a8e0-0001-7000-8000-000000000001';
+        $this->persist($oldest, 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-2', 'Ana', '2026-05-03T00:00:00+00:00');
+
+        $page = $this->reader->page(new AuditQuery(perPage: 1, page: 2));
+
+        self::assertSame(2, $page->total);
+        self::assertCount(1, $page->entries);
+        self::assertSame($oldest, $page->entries[0]->id);
     }
 
     public function testFiltersByDateRange(): void

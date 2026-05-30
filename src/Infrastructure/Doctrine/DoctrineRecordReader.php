@@ -26,7 +26,7 @@ final readonly class DoctrineRecordReader implements RecordReader
             ->select('r')
             ->orderBy('r.occurredAt', 'DESC')
             ->addOrderBy('r.id', 'DESC')
-            ->setFirstResult(max(0, ($query->page - 1) * $query->perPage))
+            ->setFirstResult(($query->page - 1) * $query->perPage)
             ->setMaxResults($query->perPage)
             ->getQuery()
             ->getResult();
