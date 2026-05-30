@@ -35,3 +35,6 @@ jobs:
 
       - name: Tests
         run: composer test
+
+      - name: Mutation testing
+        run: composer infection
