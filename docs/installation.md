@@ -18,6 +18,19 @@ mapping. Run a migration to create the `audit_record` table, then (recommended)
 grant the application role `INSERT`/`SELECT` only — `REVOKE UPDATE, DELETE` — to
 enforce append-only at the database layer.
 
+## Requirements
+
+The default port implementations autowire framework services, so the consuming
+application must have these subsystems enabled (the standard Symfony full-stack
+setup already does):
+
+- the **security** component — `SecurityActorResolver` injects `TokenStorageInterface`;
+- the **translator** (`framework.translator`) — `TranslatorAuditRenderer` injects `TranslatorInterface`.
+
+If either is disabled, container compilation fails with an autowiring error. Re-alias
+the affected port (`ActorResolver` / `AuditRenderer`) to your own implementation to
+drop the dependency.
+
 ## What you provide
 
 - A `SubjectLabeller` implementation (the default returns no label). Alias the
