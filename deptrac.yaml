@@ -24,6 +24,17 @@ deptrac:
           collectors:
             - { type: directory, value: src/DependencyInjection/.* }
             - { type: classNameRegex, value: /AuditLogBundle$/ }
+        # Vendor framework layers exist solely to make "core is framework-free"
+        # and "adapters are framework-isolated" enforceable: by covering these
+        # namespaces, a forbidden core->framework dependency becomes a violation
+        # rather than a silently-uncovered one. PSR contracts stay uncovered (and
+        # thus allowed) by design — the core may depend on them (see ADR 0009).
+        - name: SymfonyVendor
+          collectors:
+            - { type: classNameRegex, value: '/^Symfony\\/' }
+        - name: DoctrineVendor
+          collectors:
+            - { type: classNameRegex, value: '/^Doctrine\\/' }
     ruleset:
         Event: ~
         Record:
@@ -38,11 +49,13 @@ deptrac:
             - Recording
             - Record
             - Reading
+            - DoctrineVendor
         InfraSymfony:
             - Event
             - Recording
             - Record
             - Reading
+            - SymfonyVendor
         Bundle:
             - Event
             - Recording
@@ -50,3 +63,6 @@ deptrac:
             - Reading
             - InfraDoctrine
             - InfraSymfony
+            - SymfonyVendor
+        SymfonyVendor: ~
+        DoctrineVendor: ~
