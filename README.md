@@ -7,20 +7,36 @@ An audit record answers — durably and credibly — **who** did **what**, to **
 what later happens to the rest of the system. Records are immutable snapshots of a
 past fact: they survive deletion of the actor, the subject, and the producing code.
 
-> **Status:** this package currently ships the framework-free core (value objects,
-> the `AuditEvent` contract, the `Recorder` and its ports, the read contracts and
-> DTOs). Doctrine persistence and the Symfony bundle land in subsequent releases.
+The package ships as a Symfony bundle: a framework-free core (value objects, the
+`AuditEvent` contract, the `Recorder` and read ports) plus Doctrine persistence and
+Symfony runtime adapters, pre-wired by the bundle. The core stays free of Symfony and
+Doctrine ([ADR-0009](docs/adr/0009-symfony-bundle-packaging.md)).
 
 ## Requirements
 
 - PHP 8.5+
-- [`psr/clock`](https://packagist.org/packages/psr/clock), [`psr/log`](https://packagist.org/packages/psr/log)
+- Symfony 8.0 (`framework-bundle`, `security-core`, `translation`, and the components
+  pulled in transitively)
+- Doctrine (`dbal` ^4, `orm` ^3.6, `doctrine-bundle` ^3.2)
 
 ## Installation
 
 ```bash
 composer require wedevelopnl/audit-log
 ```
+
+There is no Flex recipe; register the bundle manually in `config/bundles.php`:
+
+```php
+return [
+    // ...
+    WeDevelop\AuditLog\AuditLogBundle::class => ['all' => true],
+];
+```
+
+The bundle auto-registers its Doctrine DBAL types and the `AuditRecordEntity` mapping.
+See [docs/installation.md](docs/installation.md) for the migration, the recommended
+append-only database grant, and the services you must provide.
 
 ## Design
 
@@ -31,6 +47,7 @@ Three responsibilities are deliberately separated:
 | Describe an act | `AuditEvent` | Pure data + phrasing. No clock, identity, or services. |
 | Capture the moment | `Recorder` | Resolves time, actor, origin, subject label; freezes everything. |
 | The durable read shape | `AuditRecord` | Immutable snapshot, interpretable without the producing code. |
+| Query the trail | `RecordReader` | Paginated, filterable reads (`AuditQuery` → `AuditPage`) for display. |
 
 The architecture derives from six governing properties — immutable, self-contained,
 faithful to the moment, attributable, intelligible, queryable. The rationale lives in
@@ -78,13 +95,17 @@ final readonly class UserRoleChanged extends AbstractAuditEvent
 }
 ```
 
-Record it through the `Recorder` — the single write seam. It captures the ambient
-strands of the moment (clock, acting principal, origin, subject label) and appends a
-frozen record:
+Record it through the `Recorder` — the single write seam, autowired by the bundle.
+It captures the ambient strands of the moment (clock, acting principal, origin,
+subject label) and appends a frozen record:
 
 ```php
 $recorder->record(new UserRoleChanged($userId, 'member', 'admin'));
 ```
+
+To attach human-readable subject labels, provide a `SubjectLabeller` (the default
+returns none); read the trail back through `RecordReader`. See
+[docs/installation.md](docs/installation.md) for wiring.
 
 Sensitive fields are recorded as changed **without** their values:
 
