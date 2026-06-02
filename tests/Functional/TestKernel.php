@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel;
 use WeDevelop\AuditLog\AuditLogBundle;
 use WeDevelop\AuditLog\Reading\RecordReader;
@@ -23,6 +24,13 @@ final class TestKernel extends Kernel
 {
     use MicroKernelTrait;
 
+    /**
+     * Symfony 8.1 deprecated HttpKernel's BundleInterface, which the inherited
+     * return type names. Narrow to the concrete Bundle base class our test
+     * bundles all extend — accurate, deprecation-free, and valid on 8.0 and 8.1.
+     *
+     * @return iterable<Bundle>
+     */
     #[Override]
     public function registerBundles(): iterable
     {
