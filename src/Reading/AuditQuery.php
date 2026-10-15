@@ -11,7 +11,8 @@ use WeDevelop\AuditLog\Event\AuditChannel;
 use function sprintf;
 
 /**
- * All filters are optional and combine with AND.
+ * All filters are optional and combine with AND. Without an `order`, the
+ * trail reads newest first.
  */
 final readonly class AuditQuery
 {
@@ -26,6 +27,7 @@ final readonly class AuditQuery
         public ?DateTimeImmutable $to = null,
         public int $page = 1,
         public int $perPage = 50,
+        public ?AuditOrder $order = null,
     ) {
         if ($page < 1) {
             throw new InvalidArgumentException(sprintf('Page must be 1 or greater, got %d.', $page));

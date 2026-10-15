@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use WeDevelop\AuditLog\Event\AuditChannel;
@@ -18,8 +19,11 @@ use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordReader;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordStore;
 use WeDevelop\AuditLog\Reading\AuditActor;
 use WeDevelop\AuditLog\Reading\AuditEntry;
+use WeDevelop\AuditLog\Reading\AuditOrder;
+use WeDevelop\AuditLog\Reading\AuditOrderField;
 use WeDevelop\AuditLog\Reading\AuditPage;
 use WeDevelop\AuditLog\Reading\AuditQuery;
+use WeDevelop\AuditLog\Reading\SortDirection;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
 
@@ -28,6 +32,9 @@ use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
 #[CoversClass(AuditActor::class)]
 #[CoversClass(AuditPage::class)]
 #[CoversClass(AuditQuery::class)]
+#[CoversClass(AuditOrder::class)]
+#[CoversClass(AuditOrderField::class)]
+#[CoversClass(SortDirection::class)]
 final class DoctrineRecordReaderTest extends TestCase
 {
     private EntityManagerInterface $em;
@@ -157,6 +164,80 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame($inWindow, $page->entries[0]->id);
     }
 
+    /** @return iterable<string, array{AuditOrder, list<string>}> */
+    public static function orderScenarios(): iterable
+    {
+        // ids: A = oldest, code user.created, actor "Ana", channel api
+        //      B = middle, code user.deleted, actor "Jan", channel ui
+        //      C = newest, code auth.logged_out, actor "Bram", channel console
+        yield 'occurredAt ascending' => [new AuditOrder(AuditOrderField::OccurredAt, SortDirection::Asc), ['A', 'B', 'C']];
+        yield 'occurredAt descending' => [new AuditOrder(AuditOrderField::OccurredAt, SortDirection::Desc), ['C', 'B', 'A']];
+        yield 'code ascending' => [new AuditOrder(AuditOrderField::Code, SortDirection::Asc), ['C', 'A', 'B']];
+        yield 'channel descending' => [new AuditOrder(AuditOrderField::Channel, SortDirection::Desc), ['B', 'C', 'A']];
+        yield 'actor ascending' => [new AuditOrder(AuditOrderField::Actor, SortDirection::Asc), ['A', 'C', 'B']];
+        yield 'subject descending' => [new AuditOrder(AuditOrderField::Subject, SortDirection::Desc), ['B', 'A', 'C']];
+    }
+
+    /** @param list<string> $expected */
+    #[DataProvider('orderScenarios')]
+    public function testOrdersByTheRequestedField(AuditOrder $order, array $expected): void
+    {
+        $ids = $this->seedOrderFixture();
+
+        $page = $this->reader->page(new AuditQuery(order: $order));
+
+        self::assertSame(
+            array_map(static fn (string $key): string => $ids[$key], $expected),
+            array_map(static fn (AuditEntry $e): string => $e->id, $page->entries),
+        );
+    }
+
+    public function testDefaultsToNewestFirstWithoutAnOrder(): void
+    {
+        $ids = $this->seedOrderFixture();
+
+        $page = $this->reader->page(new AuditQuery());
+
+        self::assertSame([$ids['C'], $ids['B'], $ids['A']], array_map(static fn (AuditEntry $e): string => $e->id, $page->entries));
+    }
+
+    public function testBreaksTiesByIdSoPagesNeitherRepeatNorSkipRows(): void
+    {
+        // Three rows sharing one code: ordering by code alone is ambiguous.
+        // SQLite returns tied rows in insertion order, so they are inserted
+        // out of id order; otherwise the test passes without the tie-break.
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00');
+        $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-1', 'Jan', '2026-05-03T00:00:00+00:00');
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
+        $order = new AuditOrder(AuditOrderField::Code, SortDirection::Asc);
+
+        $seen = [];
+        foreach ([1, 2, 3] as $n) {
+            $seen[] = $this->reader->page(new AuditQuery(page: $n, perPage: 1, order: $order))->entries[0]->id;
+        }
+
+        self::assertSame([
+            '0190a8e0-0001-7000-8000-000000000001',
+            '0190a8e0-0002-7000-8000-000000000002',
+            '0190a8e0-0003-7000-8000-000000000003',
+        ], $seen);
+    }
+
+    /** @return array{A: string, B: string, C: string} */
+    private function seedOrderFixture(): array
+    {
+        $ids = [
+            'A' => '0190a8e0-0001-7000-8000-00000000000a',
+            'B' => '0190a8e0-0002-7000-8000-00000000000b',
+            'C' => '0190a8e0-0003-7000-8000-00000000000c',
+        ];
+        $this->persist($ids['A'], 'user.created', 'actor-a', 'Ana', '2026-05-01T00:00:00+00:00', AuditChannel::Api, subjectLabel: 'Mira');
+        $this->persist($ids['B'], 'user.deleted', 'actor-b', 'Jan', '2026-05-02T00:00:00+00:00', AuditChannel::Ui, subjectLabel: 'Zoë');
+        $this->persist($ids['C'], 'auth.logged_out', 'actor-c', 'Bram', '2026-05-03T00:00:00+00:00', AuditChannel::Console, subjectLabel: 'Anton');
+
+        return $ids;
+    }
+
     /** @param class-string $subjectClass */
     private function persist(
         string $id,
@@ -167,6 +248,7 @@ final class DoctrineRecordReaderTest extends TestCase
         AuditChannel $channel = AuditChannel::Ui,
         string $subjectClass = stdClass::class,
         string $subjectId = 'user-1',
+        ?string $subjectLabel = null,
     ): void {
         $this->store->add(new NewAuditRecord(
             id: $id,
@@ -177,7 +259,7 @@ final class DoctrineRecordReaderTest extends TestCase
             actorLabel: $actorLabel,
             subjectClass: $subjectClass,
             subjectId: $subjectId,
-            subjectLabel: null,
+            subjectLabel: $subjectLabel,
             ipAddress: null,
             changes: null,
             data: null,

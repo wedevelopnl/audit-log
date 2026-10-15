@@ -107,6 +107,23 @@ To attach human-readable subject labels, provide a `SubjectLabeller` (the defaul
 returns none); read the trail back through `RecordReader`. See
 [docs/installation.md](docs/installation.md) for wiring.
 
+Read a filtered, ordered page of the trail through `RecordReader::page()`:
+
+```php
+use WeDevelop\AuditLog\Reading\AuditOrder;
+use WeDevelop\AuditLog\Reading\AuditOrderField;
+use WeDevelop\AuditLog\Reading\AuditQuery;
+use WeDevelop\AuditLog\Reading\SortDirection;
+
+$page = $reader->page(new AuditQuery(
+    code: 'user.deleted',
+    order: new AuditOrder(AuditOrderField::Actor, SortDirection::Asc),
+));
+```
+
+Without an `order` the trail reads newest first; every order ends on the record id,
+so rows sharing a value keep one position across pages.
+
 Sensitive fields are recorded as changed **without** their values:
 
 ```php
