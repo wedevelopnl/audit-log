@@ -122,7 +122,9 @@ $page = $reader->page(new AuditQuery(
 ```
 
 Without an `order` the trail reads newest first; every order ends on the record id,
-so rows sharing a value keep one position across pages.
+so rows sharing a value keep one position across pages. Rows without an actor or
+subject label sort where the database puts NULLs (Postgres: last ascending, first
+descending).
 
 Sensitive fields are recorded as changed **without** their values:
 
