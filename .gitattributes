@@ -11,3 +11,5 @@
 /deptrac.yaml           export-ignore
 /phpunit.dist.xml       export-ignore
 /infection.json5        export-ignore
+/igor-baseline.json     export-ignore
+/igor-baseline.md       export-ignore
