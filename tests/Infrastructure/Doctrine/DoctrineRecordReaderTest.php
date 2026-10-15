@@ -201,7 +201,24 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame([$ids['C'], $ids['B'], $ids['A']], array_map(static fn (AuditEntry $e): string => $e->id, $page->entries));
     }
 
-    public function testBreaksTiesByIdSoPagesNeitherRepeatNorSkipRows(): void
+    /** @return iterable<string, array{SortDirection, list<string>}> */
+    public static function tieBreakScenarios(): iterable
+    {
+        yield 'ascending' => [SortDirection::Asc, [
+            '0190a8e0-0001-7000-8000-000000000001',
+            '0190a8e0-0002-7000-8000-000000000002',
+            '0190a8e0-0003-7000-8000-000000000003',
+        ]];
+        yield 'descending' => [SortDirection::Desc, [
+            '0190a8e0-0003-7000-8000-000000000003',
+            '0190a8e0-0002-7000-8000-000000000002',
+            '0190a8e0-0001-7000-8000-000000000001',
+        ]];
+    }
+
+    /** @param list<string> $expected */
+    #[DataProvider('tieBreakScenarios')]
+    public function testBreaksTiesByIdSoPagesNeitherRepeatNorSkipRows(SortDirection $direction, array $expected): void
     {
         // Three rows sharing one code: ordering by code alone is ambiguous.
         // SQLite returns tied rows in insertion order, so they are inserted
@@ -209,18 +226,14 @@ final class DoctrineRecordReaderTest extends TestCase
         $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00');
         $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-1', 'Jan', '2026-05-03T00:00:00+00:00');
         $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
-        $order = new AuditOrder(AuditOrderField::Code, SortDirection::Asc);
+        $order = new AuditOrder(AuditOrderField::Code, $direction);
 
         $seen = [];
         foreach ([1, 2, 3] as $n) {
             $seen[] = $this->reader->page(new AuditQuery(page: $n, perPage: 1, order: $order))->entries[0]->id;
         }
 
-        self::assertSame([
-            '0190a8e0-0001-7000-8000-000000000001',
-            '0190a8e0-0002-7000-8000-000000000002',
-            '0190a8e0-0003-7000-8000-000000000003',
-        ], $seen);
+        self::assertSame($expected, $seen);
     }
 
     /** @return array{A: string, B: string, C: string} */
