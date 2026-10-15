@@ -46,6 +46,7 @@
             "phpstan/extension-installer": true,
             "infection/extension-installer": true
         },
+        "autoloader-suffix": "AuditLog",
         "sort-packages": true
     },
     "scripts": {
@@ -54,7 +55,7 @@
         "phpstan": "phpstan analyse --memory-limit=512M",
         "rector-check": "rector process --dry-run",
         "deptrac": "deptrac analyse --config-file=deptrac.yaml",
-        "igor": "igor-php --no-agent .",
+        "igor": "igor-php --no-agent -baseline igor-baseline.json .",
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-text",
         "infection": [

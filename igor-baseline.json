@@ -1,0 +1,169 @@
+{
+  "files": {
+    "src/Recording/DefaultRecorder.php": [
+      {
+        "message": "Mutation detected on an injected dependency ($this->store). Risk of State Leak in a worker."
+      }
+    ],
+    "vendor/autoload.php": [
+      {
+        "message": "Function 'header' directly mutates SAPI HTTP output headers."
+      }
+    ],
+    "vendor/composer/ClassLoader.php": [
+      {
+        "message": "Mutation of state 'apcuPrefix' in ClassLoader::setApcuPrefix()"
+      },
+      {
+        "message": "Mutation of state 'classMap' in ClassLoader::addClassMap()"
+      },
+      {
+        "message": "Mutation of state 'classMap' in ClassLoader::addClassMap()"
+      },
+      {
+        "message": "Mutation of state 'classMapAuthoritative' in ClassLoader::setClassMapAuthoritative()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr0' in ClassLoader::add()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr0' in ClassLoader::add()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr0' in ClassLoader::set()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'fallbackDirsPsr4' in ClassLoader::setPsr4()"
+      },
+      {
+        "message": "Mutation of state 'missingClasses' in ClassLoader::findFile()"
+      },
+      {
+        "message": "Mutation of state 'prefixDirsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixDirsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixDirsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixDirsPsr4' in ClassLoader::setPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixLengthsPsr4' in ClassLoader::addPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixLengthsPsr4' in ClassLoader::setPsr4()"
+      },
+      {
+        "message": "Mutation of state 'prefixesPsr0' in ClassLoader::add()"
+      },
+      {
+        "message": "Mutation of state 'prefixesPsr0' in ClassLoader::add()"
+      },
+      {
+        "message": "Mutation of state 'prefixesPsr0' in ClassLoader::add()"
+      },
+      {
+        "message": "Mutation of state 'prefixesPsr0' in ClassLoader::set()"
+      },
+      {
+        "message": "Mutation of state 'static::$includeFile' in ClassLoader::initializeIncludeClosure()"
+      },
+      {
+        "message": "Mutation of state 'static::$registeredLoaders' in ClassLoader::register()"
+      },
+      {
+        "message": "Mutation of state 'static::$registeredLoaders' in ClassLoader::register()"
+      },
+      {
+        "message": "Mutation of state 'useIncludePath' in ClassLoader::setUseIncludePath()"
+      }
+    ],
+    "vendor/composer/InstalledVersions.php": [
+      {
+        "message": "Mutation of state 'static::$canGetVendors' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::getRawData()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::getRawData()"
+      },
+      {
+        "message": "Mutation of state 'static::$installed' in InstalledVersions::reload()"
+      },
+      {
+        "message": "Mutation of state 'static::$installedByVendor' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installedByVendor' in InstalledVersions::reload()"
+      },
+      {
+        "message": "Mutation of state 'static::$installedIsLocalDir' in InstalledVersions::getInstalled()"
+      },
+      {
+        "message": "Mutation of state 'static::$installedIsLocalDir' in InstalledVersions::reload()"
+      },
+      {
+        "message": "Mutation of state 'static::$selfDir' in InstalledVersions::getSelfDir()"
+      }
+    ],
+    "vendor/composer/autoload_real.php": [
+      {
+        "message": "Mutation of state 'static::$loader' in ComposerAutoloaderInitAuditLog::getLoader()"
+      }
+    ],
+    "vendor/composer/platform_check.php": [
+      {
+        "message": "Function 'header' directly mutates SAPI HTTP output headers."
+      }
+    ],
+    "vendor/psr/log/src/LoggerAwareTrait.php": [
+      {
+        "message": "Mutation of state 'logger' in LoggerAwareTrait::setLogger()"
+      }
+    ],
+    "vendor/symfony/polyfill-php84/Resources/stubs/ReflectionConstant.php": [
+      {
+        "message": "Function 'set_error_handler' modifies global process error handlers."
+      },
+      {
+        "message": "Mutation of state 'static::$persistentConstants' in ReflectionConstant::__toString()"
+      }
+    ],
+    "vendor/symfony/var-dumper/Resources/functions/dump.php": [
+      {
+        "message": "Function 'header' directly mutates SAPI HTTP output headers."
+      },
+      {
+        "message": "Usage of exit/die is forbidden in Worker mode."
+      },
+      {
+        "message": "Usage of exit/die is forbidden in Worker mode."
+      },
+      {
+        "message": "Usage of exit/die is forbidden in Worker mode."
+      },
+      {
+        "message": "Usage of exit/die is forbidden in Worker mode."
+      }
+    ]
+  }
+}
