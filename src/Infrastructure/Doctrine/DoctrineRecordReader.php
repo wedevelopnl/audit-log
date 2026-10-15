@@ -9,9 +9,12 @@ use Doctrine\ORM\QueryBuilder;
 use Override;
 use WeDevelop\AuditLog\Reading\AuditActor;
 use WeDevelop\AuditLog\Reading\AuditEntry;
+use WeDevelop\AuditLog\Reading\AuditOrder;
+use WeDevelop\AuditLog\Reading\AuditOrderField;
 use WeDevelop\AuditLog\Reading\AuditPage;
 use WeDevelop\AuditLog\Reading\AuditQuery;
 use WeDevelop\AuditLog\Reading\RecordReader;
+use WeDevelop\AuditLog\Reading\SortDirection;
 
 final readonly class DoctrineRecordReader implements RecordReader
 {
@@ -22,10 +25,7 @@ final readonly class DoctrineRecordReader implements RecordReader
     #[Override]
     public function page(AuditQuery $query): AuditPage
     {
-        $rows = $this->filtered($query)
-            ->select('r')
-            ->orderBy('r.occurredAt', 'DESC')
-            ->addOrderBy('r.id', 'DESC')
+        $rows = $this->ordered($this->filtered($query)->select('r'), $query->order)
             ->setFirstResult(($query->page - 1) * $query->perPage)
             ->setMaxResults($query->perPage)
             ->getQuery()
@@ -95,6 +95,28 @@ final readonly class DoctrineRecordReader implements RecordReader
         }
 
         return $qb;
+    }
+
+    /**
+     * Applies the requested order, or newest-first without one. Every order
+     * ends on the id so rows sharing a value keep one position across pages.
+     */
+    private function ordered(QueryBuilder $qb, ?AuditOrder $order): QueryBuilder
+    {
+        if (null === $order) {
+            return $qb->orderBy('r.occurredAt', 'DESC')->addOrderBy('r.id', 'DESC');
+        }
+
+        $column = match ($order->field) {
+            AuditOrderField::OccurredAt => 'r.occurredAt',
+            AuditOrderField::Code => 'r.code',
+            AuditOrderField::Channel => 'r.channel',
+            AuditOrderField::Actor => 'r.actorLabel',
+            AuditOrderField::Subject => 'r.subjectLabel',
+        };
+        $direction = SortDirection::Asc === $order->direction ? 'ASC' : 'DESC';
+
+        return $qb->orderBy($column, $direction)->addOrderBy('r.id', $direction);
     }
 
     private function toEntry(AuditRecordEntity $record): AuditEntry
