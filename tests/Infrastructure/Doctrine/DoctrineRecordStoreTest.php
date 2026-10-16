@@ -16,6 +16,7 @@ use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\AuditRecordEntity;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordStore;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\ChangesetType;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\JsonValueType;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\RenderPayloadType;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
@@ -23,6 +24,7 @@ use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
 #[CoversClass(DoctrineRecordStore::class)]
 #[CoversClass(AuditRecordEntity::class)]
 #[CoversClass(ChangesetType::class)]
+#[CoversClass(JsonValueType::class)]
 #[CoversClass(RenderPayloadType::class)]
 final class DoctrineRecordStoreTest extends TestCase
 {

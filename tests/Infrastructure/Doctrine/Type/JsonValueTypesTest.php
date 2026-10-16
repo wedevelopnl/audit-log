@@ -14,10 +14,12 @@ use stdClass;
 use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\ChangesetType;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\JsonValueType;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\Type\RenderPayloadType;
 
 use function sprintf;
 
+#[CoversClass(JsonValueType::class)]
 #[CoversClass(ChangesetType::class)]
 #[CoversClass(RenderPayloadType::class)]
 final class JsonValueTypesTest extends TestCase
