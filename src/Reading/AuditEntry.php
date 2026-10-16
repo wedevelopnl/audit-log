@@ -29,4 +29,24 @@ final readonly class AuditEntry implements AuditRecord
         public RenderPayload $render,
     ) {
     }
+
+    /** A detached copy of any stored record, carrying no persistence handle. */
+    public static function fromRecord(AuditRecord $record): self
+    {
+        return new self(
+            id: $record->id,
+            code: $record->code,
+            channel: $record->channel,
+            occurredAt: $record->occurredAt,
+            actorId: $record->actorId,
+            actorLabel: $record->actorLabel,
+            subjectClass: $record->subjectClass,
+            subjectId: $record->subjectId,
+            subjectLabel: $record->subjectLabel,
+            ipAddress: $record->ipAddress,
+            changes: $record->changes,
+            data: $record->data,
+            render: $record->render,
+        );
+    }
 }
