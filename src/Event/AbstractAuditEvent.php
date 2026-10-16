@@ -35,12 +35,10 @@ abstract readonly class AbstractAuditEvent implements AuditEvent
     #[Override]
     public function render(): RenderPayload
     {
-        $info = [];
-        foreach ($this->additionalInfo() as $line) {
-            $info[] = $line;
-        }
-
-        return new RenderPayload(new RenderLine($this->messageKey(), $this->parameters()), $info);
+        return new RenderPayload(
+            new RenderLine($this->messageKey(), $this->parameters()),
+            iterator_to_array($this->additionalInfo(), false),
+        );
     }
 
     protected function messageKey(): string
