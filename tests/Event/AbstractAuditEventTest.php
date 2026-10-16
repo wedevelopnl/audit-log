@@ -7,8 +7,10 @@ namespace WeDevelop\AuditLog\Tests\Event;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use WeDevelop\AuditLog\Event\AbstractAuditEvent;
+use WeDevelop\AuditLog\Event\RenderLine;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\CustomMessageKeyEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\MinimalAuditEvent;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\MultiSourceInfoEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserRoleChangedEvent;
 
 #[CoversClass(AbstractAuditEvent::class)]
@@ -29,6 +31,16 @@ final class AbstractAuditEventTest extends TestCase
         self::assertCount(1, $payload->info);
         self::assertSame('user.role_changed.note', $payload->info[0]->translationKey);
         self::assertSame(['actor' => 'system'], $payload->info[0]->parameters);
+    }
+
+    public function testKeepsEveryInfoLineWhenItsSourcesShareKeys(): void
+    {
+        $payload = new MultiSourceInfoEvent()->render();
+
+        self::assertSame(
+            ['invoice.paid.amount', 'invoice.paid.method'],
+            array_map(static fn (RenderLine $line): string => $line->translationKey, $payload->info),
+        );
     }
 
     public function testDataDefaultsToNull(): void
