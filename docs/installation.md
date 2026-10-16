@@ -14,9 +14,18 @@ return [
 ```
 
 The bundle auto-registers its Doctrine DBAL types and the `AuditRecordEntity`
-mapping. Run a migration to create the `audit_record` table, then (recommended)
-grant the application role `INSERT`/`SELECT` only — `REVOKE UPDATE, DELETE` — to
-enforce append-only at the database layer.
+mapping, so the `audit_record` table appears in your schema diff like any entity of
+your own. The package does not ship migrations; generate one with your usual tool,
+for example with DoctrineMigrationsBundle:
+
+```bash
+bin/console doctrine:migrations:diff
+bin/console doctrine:migrations:migrate
+```
+
+Without migrations, `bin/console doctrine:schema:update --dump-sql` prints the DDL.
+Then (recommended) grant the application role `INSERT`/`SELECT` only —
+`REVOKE UPDATE, DELETE` — to enforce append-only at the database layer.
 
 ## Requirements
 
@@ -63,3 +72,20 @@ watched. See [ADR-0010](adr/0010-records-commit-with-the-callers-flush.md).
 audit_log:
     translation_domain: audit   # default
 ```
+
+## Rendering
+
+`AuditRenderer` translates each record's frozen `RenderPayload` in the configured
+domain. A message key defaults to the event's action code (override
+`AbstractAuditEvent::messageKey()` to change it), so every code needs an entry in
+that domain, or the raw key renders:
+
+```yaml
+# translations/audit+intl-icu.en.yaml — ICU placeholders match the parameter
+# keys returned by parameters(), e.g. ['from' => ..., 'to' => ...]
+user.role_changed: 'Role changed from {from} to {to}'
+```
+
+The rendered strings are plain text that interpolates recorded values such as actor
+and subject labels, which may come from user input. Escape them in the view: Twig's
+autoescaping does this, so never pass them through `|raw`.
