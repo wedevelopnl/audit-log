@@ -10,8 +10,10 @@ use Override;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\ErrorHandler\ErrorHandler;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\AuditRecordEntity;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\UnflushedRecordWarner;
 use WeDevelop\AuditLog\Reading\AuditQuery;
 use WeDevelop\AuditLog\Reading\RecordReader;
 use WeDevelop\AuditLog\Recording\Recorder;
@@ -83,6 +85,22 @@ final class AuditLogBundleTest extends KernelTestCase
         $roleChanged = $roleChangedEntries[0];
         self::assertNull($roleChanged->subjectLabel); // NullSubjectLabeller returned null
         self::assertSame('role', $roleChanged->changes?->fields[0]->field);
+    }
+
+    public function testListensForUnflushedRecordsOnBothTerminateEvents(): void
+    {
+        self::bootKernel();
+
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = self::getContainer()->get('event_dispatcher');
+
+        foreach (['kernel.terminate', 'console.terminate'] as $event) {
+            $warners = array_filter(
+                $dispatcher->getListeners($event),
+                static fn (mixed $listener): bool => is_array($listener) && $listener[0] instanceof UnflushedRecordWarner,
+            );
+            self::assertCount(1, $warners, $event);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordReader;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordStore;
+use WeDevelop\AuditLog\Infrastructure\Doctrine\UnflushedRecordWarner;
 use WeDevelop\AuditLog\Infrastructure\Symfony\Http\RequestOriginResolver;
 use WeDevelop\AuditLog\Infrastructure\Symfony\NullSubjectLabeller;
 use WeDevelop\AuditLog\Infrastructure\Symfony\Security\SecurityActorResolver;
@@ -41,6 +42,11 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(DoctrineRecordStore::class);
     $services->alias(RecordStore::class, DoctrineRecordStore::class);
+
+    // Runs late on both terminate events, after the application's own listeners.
+    $services->set(UnflushedRecordWarner::class)
+        ->tag('kernel.event_listener', ['event' => 'kernel.terminate', 'priority' => -1024])
+        ->tag('kernel.event_listener', ['event' => 'console.terminate', 'priority' => -1024]);
 
     $services->set(DoctrineRecordReader::class);
     $services->alias(RecordReader::class, DoctrineRecordReader::class);
