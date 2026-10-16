@@ -20,8 +20,8 @@ command (a `kernel.terminate` listener, a `postFlush` hook, after an
 
 Because `Recorder::record()` cannot signal that loss, `UnflushedRecordWarner`
 MUST run on `kernel.terminate` and `console.terminate` and log an error for every
-record still scheduled for insertion. A closed entity manager is exempt: its flush
-failed and rolled the records back together with their change.
+record still scheduled for insertion. A failed flush closes and clears the entity
+manager, so records it rolled back together with their change are not reported.
 
 ## Consequences
 

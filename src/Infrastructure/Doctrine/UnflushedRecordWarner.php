@@ -13,7 +13,8 @@ use function count;
  * DoctrineRecordStore only persists; the caller's flush commits the record. A
  * record made after the last flush (a terminate listener, a postFlush hook)
  * would vanish without a trace, so this runs at kernel/console terminate and
- * reports any record still waiting in the unit of work.
+ * reports any record still waiting in the unit of work. A failed flush closes
+ * and clears the manager, so records it rolled back are not reported.
  */
 final readonly class UnflushedRecordWarner
 {
@@ -25,12 +26,6 @@ final readonly class UnflushedRecordWarner
 
     public function __invoke(): void
     {
-        // A closed manager means the flush itself failed: the records rolled back
-        // together with the change they audit, which is not a loss to report.
-        if (!$this->entityManager->isOpen()) {
-            return;
-        }
-
         $codes = [];
         foreach ($this->entityManager->getUnitOfWork()->getScheduledEntityInsertions() as $entity) {
             if ($entity instanceof AuditRecordEntity) {
