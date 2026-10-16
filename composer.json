@@ -33,7 +33,8 @@
         "deptrac/deptrac": "^4.6",
         "infection/infection": "^0.33",
         "symfony/cache": "^8.0",
-        "symfony/security-bundle": "^8.0"
+        "symfony/security-bundle": "^8.0",
+        "symfony/translation": "^8.0"
     },
     "autoload": {
         "psr-4": { "WeDevelop\\AuditLog\\": "src/" }

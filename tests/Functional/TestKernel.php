@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel;
 use WeDevelop\AuditLog\AuditLogBundle;
+use WeDevelop\AuditLog\Reading\AuditRenderer;
 use WeDevelop\AuditLog\Reading\RecordReader;
 use WeDevelop\AuditLog\Recording\Recorder;
 
@@ -68,6 +69,7 @@ final class TestKernel extends Kernel
             'http_method_override' => false,
             'handle_all_throwables' => true,
             'php_errors' => ['log' => true],
+            'translator' => ['default_path' => '%kernel.project_dir%/tests/Functional/translations'],
         ]);
 
         $container->extension('security', [
@@ -85,6 +87,7 @@ final class TestKernel extends Kernel
         $services = $container->services();
         $services->alias('test.recorder', Recorder::class)->public();
         $services->alias('test.reader', RecordReader::class)->public();
+        $services->alias('test.renderer', AuditRenderer::class)->public();
         $services->alias('test.em', EntityManagerInterface::class)->public();
     }
 }
