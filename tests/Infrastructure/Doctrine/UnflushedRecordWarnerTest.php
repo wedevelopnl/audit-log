@@ -61,6 +61,7 @@ final class UnflushedRecordWarnerTest extends TestCase
     public function testStaysSilentWhenTheFlushFailedAndClosedTheManager(): void
     {
         $this->add('0190a8e0-0001-7000-8000-000000000001', 'user.deleted');
+        // What UnitOfWork::commit() does when the flush fails.
         $this->em->close();
 
         ($this->warner)();
