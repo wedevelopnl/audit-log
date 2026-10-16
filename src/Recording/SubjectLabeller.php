@@ -8,7 +8,8 @@ use WeDevelop\AuditLog\Event\Subject;
 
 /**
  * Snapshots a display label for the subject at record time, so the trail
- * survives the subject's deletion.
+ * survives the subject's deletion. Not consulted for events implementing
+ * ProvidesSubjectLabel: their own label wins.
  */
 interface SubjectLabeller
 {

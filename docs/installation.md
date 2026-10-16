@@ -45,8 +45,35 @@ drop the dependency.
 - A `SubjectLabeller` implementation (the default returns no label). Alias the
   port to your service:
   `WeDevelop\AuditLog\Recording\SubjectLabeller: '@App\Audit\MySubjectLabeller'`.
-- Optionally override `ActorResolver`/`OriginResolver` for richer actor labels or
-  finer channel detection.
+  An event that implements `ProvidesSubjectLabel` supplies its own label (for a
+  deleted subject, say) and the labeller is not called for it.
+- Optionally override `ActorResolver` for richer actor labels.
+- Optionally override `OriginResolver` for the channel. The default records every
+  HTTP request as `ui` (API calls and webhooks included) and everything else as
+  `console` (Messenger workers included). Records are immutable, so decide this
+  before you go live:
+
+  ```php
+  final readonly class AppOriginResolver implements OriginResolver
+  {
+      public function __construct(private RequestStack $requests) {}
+
+      public function resolve(): Origin
+      {
+          $request = $this->requests->getCurrentRequest();
+          if (null === $request) {
+              return new Origin(AuditChannel::Console, null);
+          }
+
+          $channel = str_starts_with($request->getPathInfo(), '/api/') ? AuditChannel::Api : AuditChannel::Ui;
+
+          return new Origin($channel, $request->getClientIp());
+      }
+  }
+  ```
+
+  Alias it like the labeller:
+  `WeDevelop\AuditLog\Recording\OriginResolver: '@App\Audit\AppOriginResolver'`.
 - One `AuditEvent` (extend `AbstractAuditEvent`) per auditable action, and a
   listener that calls `Recorder::record()`.
 
