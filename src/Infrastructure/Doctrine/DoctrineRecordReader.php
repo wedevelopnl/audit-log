@@ -33,7 +33,7 @@ final readonly class DoctrineRecordReader implements RecordReader
 
         /** @var list<AuditRecordEntity> $rows */
         return new AuditPage(
-            array_map($this->toEntry(...), $rows),
+            array_map(AuditEntry::fromRecord(...), $rows),
             $query->page,
             $query->perPage,
             $this->count($query),
@@ -127,24 +127,5 @@ final readonly class DoctrineRecordReader implements RecordReader
         $direction = SortDirection::Asc === $order->direction ? 'ASC' : 'DESC';
 
         return $qb->orderBy($column, $direction)->addOrderBy('r.id', $direction);
-    }
-
-    private function toEntry(AuditRecordEntity $record): AuditEntry
-    {
-        return new AuditEntry(
-            $record->id,
-            $record->code,
-            $record->channel,
-            $record->occurredAt,
-            $record->actorId,
-            $record->actorLabel,
-            $record->subjectClass,
-            $record->subjectId,
-            $record->subjectLabel,
-            $record->ipAddress,
-            $record->changes,
-            $record->data,
-            $record->render,
-        );
     }
 }
