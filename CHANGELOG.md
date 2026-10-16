@@ -7,6 +7,8 @@ called out under **Schema**: each one needs a migration in the consuming applica
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-10-16
+
 ### Added
 
 - An error is logged on `kernel.terminate` and `console.terminate` when audit
@@ -56,7 +58,8 @@ called out under **Schema**: each one needs a migration in the consuming applica
   (`AuditRecordEntity`, DBAL types, store and reader) and Symfony runtime adapters,
   pre-wired by `AuditLogBundle`.
 
-[Unreleased]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.3...HEAD
+[Unreleased]: https://github.com/wedevelopnl/audit-log/compare/6.0.0...HEAD
+[6.0.0]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.3...6.0.0
 [6.0.0-rc.3]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.2...6.0.0-rc.3
 [6.0.0-rc.2]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.1...6.0.0-rc.2
 [6.0.0-rc.1]: https://github.com/wedevelopnl/audit-log/releases/tag/6.0.0-rc.1
