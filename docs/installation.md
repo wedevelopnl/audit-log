@@ -41,6 +41,22 @@ drop the dependency.
 - One `AuditEvent` (extend `AbstractAuditEvent`) per auditable action, and a
   listener that calls `Recorder::record()`.
 
+## Flushing
+
+`Recorder::record()` persists the record without flushing; it commits with the
+application's next `EntityManager::flush()`, atomically with the audited change.
+Call `record()` before that flush. Places where no flush follows lose the record:
+
+- `kernel.terminate` / `console.terminate` listeners;
+- Doctrine `postFlush` listeners;
+- anything after an `EntityManager::clear()` or reset.
+
+The bundle logs an error (`{count} audit record(s) were recorded but never flushed
+and are lost.`, with the action codes in the context) on `kernel.terminate` and
+`console.terminate` when records are still waiting to be flushed. In a Messenger
+handler, record before the handler's flush; worker message boundaries are not
+watched. See [ADR-0010](adr/0010-records-commit-with-the-callers-flush.md).
+
 ## Configuration
 
 ```yaml
