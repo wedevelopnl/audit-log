@@ -11,9 +11,11 @@ use WeDevelop\AuditLog\Recording\Origin;
 use WeDevelop\AuditLog\Recording\OriginResolver;
 
 /**
- * Default origin resolution, read live at call time. A current request means a
- * web channel; its absence means console/worker. Consumers override this port
- * for finer channel logic (e.g. distinguishing API from UI by firewall/route).
+ * Default origin resolution, read live at call time. Any current request is
+ * recorded as Ui, API calls and webhooks included; no request means Console,
+ * Messenger workers included. Api, Job and Webhook are never produced here, and
+ * records cannot be corrected later, so applications that need them override
+ * this port (e.g. by firewall or route) before recording.
  */
 final readonly class RequestOriginResolver implements OriginResolver
 {
