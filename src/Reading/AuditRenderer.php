@@ -9,6 +9,9 @@ use WeDevelop\AuditLog\Event\RenderPayload;
 /**
  * Renders a frozen RenderPayload into localized strings. Framework-free contract;
  * the default implementation lives in Infrastructure\Symfony.
+ *
+ * The output is plain text that interpolates recorded values (labels, which may
+ * originate from user input): escape it wherever it is rendered as markup.
  */
 interface AuditRenderer
 {
