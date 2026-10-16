@@ -101,7 +101,13 @@ subject label) and appends a frozen record:
 
 ```php
 $recorder->record(new UserRoleChanged($userId, 'member', 'admin'));
+$entityManager->flush();
 ```
+
+The record is persisted, not flushed: it commits with your next flush, in the same
+transaction as the change it describes. Record **before** that flush. A record made
+after the last flush of a request or command is never written; the bundle logs an
+error when that happens ([ADR-0010](docs/adr/0010-records-commit-with-the-callers-flush.md)).
 
 To attach human-readable subject labels, provide a `SubjectLabeller` (the default
 returns none); read the trail back through `RecordReader`. See
