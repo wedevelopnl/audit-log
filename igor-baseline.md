@@ -18,7 +18,7 @@
 
 ## Project code
 
-- **`src/Recording/DefaultRecorder.php:34`**: "Mutation detected on an injected dependency (`$this->store`)". igor matches the call shape `$this->dep->add(...)`. It has no proof that state is retained. `RecordStore::add()` hands the new record to a persistence collaborator. Its only implementation, `DoctrineRecordStore::add()` (`src/Infrastructure/Doctrine/DoctrineRecordStore.php:24`), is a single `EntityManager::persist()` with no flush. The record joins the host application's unit of work, which the host's `kernel.reset` chain (Doctrine's `Registry`) clears between requests. Both classes are `final readonly` and hold only their collaborators, so the recorder keeps no per-request state. **Drop it** if a `RecordStore` implementation starts buffering records on itself instead of passing them straight on.
+- **`src/Recording/DefaultRecorder.php:40`**: "Mutation detected on an injected dependency (`$this->store`)". igor matches the call shape `$this->dep->add(...)`. It has no proof that state is retained. `RecordStore::add()` hands the new record to a persistence collaborator. Its only implementation, `DoctrineRecordStore::add()` (`src/Infrastructure/Doctrine/DoctrineRecordStore.php:24`), is a single `EntityManager::persist()` with no flush. The record joins the host application's unit of work, which the host's `kernel.reset` chain (Doctrine's `Registry`) clears between requests. Both classes are `final readonly` and hold only their collaborators, so the recorder keeps no per-request state. **Drop it** if a `RecordStore` implementation starts buffering records on itself instead of passing them straight on.
 
 ## Composer autoloader (`vendor/autoload.php`, `vendor/composer/*`)
 
