@@ -23,9 +23,12 @@ use WeDevelop\AuditLog\Recording\NewAuditRecord;
 #[ORM\Entity]
 #[ORM\Table(name: 'audit_record')]
 #[ORM\Index(fields: ['code'])]
+#[ORM\Index(fields: ['channel'])]
 #[ORM\Index(fields: ['occurredAt'])]
 #[ORM\Index(fields: ['actorId'])]
+#[ORM\Index(fields: ['actorLabel'])]
 #[ORM\Index(fields: ['subjectClass', 'subjectId'])]
+#[ORM\Index(fields: ['subjectLabel'])]
 class AuditRecordEntity implements AuditRecord
 {
     #[ORM\Id]
