@@ -30,6 +30,8 @@ use WeDevelop\AuditLog\Reading\SortDirection;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Tests\Support\Doctrine\EntityManagerFactory;
 
+use function count;
+
 #[CoversClass(DoctrineRecordReader::class)]
 #[CoversClass(AuditEntry::class)]
 #[CoversClass(AuditActor::class)]
@@ -124,18 +126,6 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame($oldest, $page->entries[0]->id);
     }
 
-    public function testFiltersByDateRange(): void
-    {
-        $recent = '0190a8e0-0002-7000-8000-000000000002';
-        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
-        $this->persist($recent, 'user.deleted', 'actor-1', 'Jan', '2026-06-01T00:00:00+00:00');
-
-        $page = $this->reader->page(new AuditQuery(from: new DateTimeImmutable('2026-05-15T00:00:00+00:00')));
-
-        self::assertSame(1, $page->total);
-        self::assertSame($recent, $page->entries[0]->id);
-    }
-
     public function testListsDistinctActorsSortedByLabel(): void
     {
         $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-2', 'Ana', '2026-05-01T00:00:00+00:00');
@@ -180,63 +170,34 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertEquals([new AuditActor('actor-1', 'actor-1')], $this->reader->actors());
     }
 
-    public function testFiltersByActor(): void
+    /** @return iterable<string, array{AuditQuery, list<string>}> */
+    public static function filterScenarios(): iterable
     {
-        $target = '0190a8e0-0002-7000-8000-000000000002';
-        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
-        $this->persist($target, 'user.deleted', 'actor-2', 'Ana', '2026-05-02T00:00:00+00:00');
-
-        $page = $this->reader->page(new AuditQuery(actorId: 'actor-2'));
-
-        self::assertSame(1, $page->total);
-        self::assertSame($target, $page->entries[0]->id);
+        // The trail from seedTrail(), newest first: C (05-03), B (05-02), A (05-01).
+        yield 'by code' => [new AuditQuery(code: 'user.deleted'), ['B']];
+        yield 'by actor' => [new AuditQuery(actorId: 'actor-a'), ['A']];
+        yield 'by subject class' => [new AuditQuery(subjectClass: Exception::class), ['C']];
+        yield 'by subject id, not subject class' => [new AuditQuery(subjectId: 'invoice-9'), ['C']];
+        yield 'by channel' => [new AuditQuery(channel: AuditChannel::Api), ['A']];
+        yield 'from is inclusive' => [new AuditQuery(from: new DateTimeImmutable('2026-05-02T00:00:00+00:00')), ['C', 'B']];
+        yield 'to is inclusive' => [new AuditQuery(to: new DateTimeImmutable('2026-05-02T00:00:00+00:00')), ['B', 'A']];
+        yield 'filters combine with AND' => [new AuditQuery(code: 'user.created', actorId: 'actor-b'), []];
+        yield 'no match' => [new AuditQuery(code: 'invoice.paid'), []];
     }
 
-    public function testFiltersBySubjectClassAndIdIndependently(): void
+    /** @param list<string> $expected */
+    #[DataProvider('filterScenarios')]
+    public function testFiltersTheTrail(AuditQuery $query, array $expected): void
     {
-        $target = '0190a8e0-0002-7000-8000-000000000002';
-        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00', subjectClass: stdClass::class, subjectId: 'user-1');
-        $this->persist($target, 'invoice.paid', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00', subjectClass: Exception::class, subjectId: 'invoice-9');
+        $ids = $this->seedTrail();
 
-        // subjectClass alone selects the one record of that class...
-        $byClass = $this->reader->page(new AuditQuery(subjectClass: Exception::class));
-        self::assertSame(1, $byClass->total);
-        self::assertSame($target, $byClass->entries[0]->id);
+        $page = $this->reader->page($query);
 
-        // ...and subjectId is bound to subject_id, not subject_class.
-        $byId = $this->reader->page(new AuditQuery(subjectId: 'invoice-9'));
-        self::assertSame(1, $byId->total);
-        self::assertSame($target, $byId->entries[0]->id);
-    }
-
-    public function testFiltersByChannel(): void
-    {
-        $target = '0190a8e0-0002-7000-8000-000000000002';
-        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00', channel: AuditChannel::Ui);
-        $this->persist($target, 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00', channel: AuditChannel::Api);
-
-        $page = $this->reader->page(new AuditQuery(channel: AuditChannel::Api));
-
-        self::assertSame(1, $page->total);
-        self::assertSame($target, $page->entries[0]->id);
-    }
-
-    public function testFiltersByInclusiveFromToWindow(): void
-    {
-        $inWindow = '0190a8e0-0002-7000-8000-000000000002';
-        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Jan', '2026-05-01T00:00:00+00:00');
-        $this->persist($inWindow, 'user.deleted', 'actor-1', 'Jan', '2026-05-10T00:00:00+00:00');
-        $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-1', 'Jan', '2026-05-20T00:00:00+00:00');
-
-        // The window boundary equals the in-window record's timestamp, pinning
-        // from as >= (inclusive lower) and to as <= (inclusive upper).
-        $page = $this->reader->page(new AuditQuery(
-            from: new DateTimeImmutable('2026-05-10T00:00:00+00:00'),
-            to: new DateTimeImmutable('2026-05-15T00:00:00+00:00'),
-        ));
-
-        self::assertSame(1, $page->total);
-        self::assertSame($inWindow, $page->entries[0]->id);
+        self::assertSame(count($expected), $page->total);
+        self::assertSame(
+            array_map(static fn (string $key): string => $ids[$key], $expected),
+            array_map(static fn (AuditEntry $e): string => $e->id, $page->entries),
+        );
     }
 
     /** @return iterable<string, array{AuditOrder, list<string>}> */
@@ -257,7 +218,7 @@ final class DoctrineRecordReaderTest extends TestCase
     #[DataProvider('orderScenarios')]
     public function testOrdersByTheRequestedField(AuditOrder $order, array $expected): void
     {
-        $ids = $this->seedOrderFixture();
+        $ids = $this->seedTrail();
 
         $page = $this->reader->page(new AuditQuery(order: $order));
 
@@ -269,7 +230,7 @@ final class DoctrineRecordReaderTest extends TestCase
 
     public function testDefaultsToNewestFirstWithoutAnOrder(): void
     {
-        $ids = $this->seedOrderFixture();
+        $ids = $this->seedTrail();
 
         $page = $this->reader->page(new AuditQuery());
 
@@ -312,7 +273,7 @@ final class DoctrineRecordReaderTest extends TestCase
     }
 
     /** @return array{A: string, B: string, C: string} */
-    private function seedOrderFixture(): array
+    private function seedTrail(): array
     {
         $ids = [
             'A' => '0190a8e0-0001-7000-8000-00000000000a',
@@ -321,7 +282,7 @@ final class DoctrineRecordReaderTest extends TestCase
         ];
         $this->persist($ids['A'], 'user.created', 'actor-a', 'Ana', '2026-05-01T00:00:00+00:00', AuditChannel::Api, subjectLabel: 'Mira');
         $this->persist($ids['B'], 'user.deleted', 'actor-b', 'Jan', '2026-05-02T00:00:00+00:00', AuditChannel::Ui, subjectLabel: 'Zoë');
-        $this->persist($ids['C'], 'auth.logged_out', 'actor-c', 'Bram', '2026-05-03T00:00:00+00:00', AuditChannel::Console, subjectLabel: 'Anton');
+        $this->persist($ids['C'], 'auth.logged_out', 'actor-c', 'Bram', '2026-05-03T00:00:00+00:00', AuditChannel::Console, Exception::class, 'invoice-9', 'Anton');
 
         return $ids;
     }
