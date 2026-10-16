@@ -35,6 +35,8 @@ final readonly class FieldChange
         if (null !== $value && !is_scalar($value)) {
             throw new InvalidArgumentException(sprintf('FieldChange "%s" %s value must be a scalar or null; got %s.', $field, $side, get_debug_type($value)));
         }
+
+        JsonEncodable::assert($value, sprintf('FieldChange "%s" %s value', $field, $side));
     }
 
     public static function redacted(string $field): self

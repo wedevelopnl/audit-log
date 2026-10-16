@@ -10,8 +10,15 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use WeDevelop\AuditLog\Event\FieldChange;
+use WeDevelop\AuditLog\Event\JsonEncodable;
+
+use function sprintf;
+
+use const INF;
+use const NAN;
 
 #[CoversClass(FieldChange::class)]
+#[CoversClass(JsonEncodable::class)]
 final class FieldChangeTest extends TestCase
 {
     /** @return iterable<string, array{mixed, mixed}> */
@@ -47,5 +54,32 @@ final class FieldChangeTest extends TestCase
         $this->expectExceptionMessage('FieldChange "at" new value must be a scalar or null; got DateTimeImmutable.');
 
         FieldChange::of('at', null, new DateTimeImmutable('2026-05-30T00:00:00+00:00'));
+    }
+
+    /** @return iterable<string, array{float|string, string}> */
+    public static function scalarsJsonCannotEncode(): iterable
+    {
+        yield 'NAN' => [NAN, 'Inf and NaN cannot be JSON encoded'];
+        yield 'INF' => [INF, 'Inf and NaN cannot be JSON encoded'];
+        yield 'negative INF' => [-INF, 'Inf and NaN cannot be JSON encoded'];
+        yield 'invalid UTF-8' => ["\xB1\x31", 'Malformed UTF-8 characters, possibly incorrectly encoded'];
+    }
+
+    #[DataProvider('scalarsJsonCannotEncode')]
+    public function testRejectsAnOldScalarThatJsonCannotEncode(float|string $value, string $reason): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(sprintf('FieldChange "score" old value must be JSON-encodable: %s.', $reason));
+
+        FieldChange::of('score', $value, 1);
+    }
+
+    #[DataProvider('scalarsJsonCannotEncode')]
+    public function testRejectsANewScalarThatJsonCannotEncode(float|string $value, string $reason): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(sprintf('FieldChange "score" new value must be JSON-encodable: %s.', $reason));
+
+        FieldChange::of('score', 1, $value);
     }
 }

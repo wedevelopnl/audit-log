@@ -7,7 +7,10 @@ namespace WeDevelop\AuditLog\Recording;
 use Override;
 use Psr\Clock\ClockInterface;
 use WeDevelop\AuditLog\Event\AuditEvent;
+use WeDevelop\AuditLog\Event\JsonEncodable;
 use WeDevelop\AuditLog\Event\ProvidesSubjectLabel;
+
+use function sprintf;
 
 final readonly class DefaultRecorder implements Recorder
 {
@@ -24,6 +27,9 @@ final readonly class DefaultRecorder implements Recorder
     #[Override]
     public function record(AuditEvent $event): void
     {
+        $data = $event->data();
+        JsonEncodable::assert($data, sprintf('Audit event "%s" data', $event->code()));
+
         $subject = $event->subject();
         $label = $event instanceof ProvidesSubjectLabel
             ? $event->subjectLabel()
@@ -43,7 +49,7 @@ final readonly class DefaultRecorder implements Recorder
             subjectLabel: $label,
             ipAddress: $origin->ipAddress,
             changes: $event->changes(),
-            data: $event->data(),
+            data: $data,
             render: $event->render(),
         ));
     }
