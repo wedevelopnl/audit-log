@@ -105,6 +105,37 @@ final class DoctrineRecordReaderTest extends TestCase
         self::assertSame('Jan', $actors[1]->label);
     }
 
+    public function testLabelsEachActorByTheirMostRecentRecord(): void
+    {
+        // The older label sorts after the newer one, so picking the
+        // lexicographic maximum would surface the stale name.
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', 'Zed', '2026-05-01T00:00:00+00:00');
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-1', 'Anna', '2026-05-03T00:00:00+00:00');
+        // Same instant: the higher id is the later record.
+        $this->persist('0190a8e0-0004-7000-8000-000000000004', 'user.deleted', 'actor-2', 'Bram', '2026-05-02T00:00:00+00:00');
+        $this->persist('0190a8e0-0003-7000-8000-000000000003', 'user.deleted', 'actor-2', 'Yara', '2026-05-02T00:00:00+00:00');
+
+        self::assertEquals(
+            [new AuditActor('actor-1', 'Anna'), new AuditActor('actor-2', 'Bram')],
+            $this->reader->actors(),
+        );
+    }
+
+    public function testLeavesRecordsWithoutAnActorOutOfTheActorList(): void
+    {
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', null, null, '2026-05-01T00:00:00+00:00');
+        $this->persist('0190a8e0-0002-7000-8000-000000000002', 'user.deleted', 'actor-1', 'Jan', '2026-05-02T00:00:00+00:00');
+
+        self::assertEquals([new AuditActor('actor-1', 'Jan')], $this->reader->actors());
+    }
+
+    public function testFallsBackToTheActorIdWhenNoLabelWasRecorded(): void
+    {
+        $this->persist('0190a8e0-0001-7000-8000-000000000001', 'user.deleted', 'actor-1', null, '2026-05-01T00:00:00+00:00');
+
+        self::assertEquals([new AuditActor('actor-1', 'actor-1')], $this->reader->actors());
+    }
+
     public function testFiltersByActor(): void
     {
         $target = '0190a8e0-0002-7000-8000-000000000002';
@@ -255,8 +286,8 @@ final class DoctrineRecordReaderTest extends TestCase
     private function persist(
         string $id,
         string $code,
-        string $actorId,
-        string $actorLabel,
+        ?string $actorId,
+        ?string $actorLabel,
         string $at,
         AuditChannel $channel = AuditChannel::Ui,
         string $subjectClass = stdClass::class,

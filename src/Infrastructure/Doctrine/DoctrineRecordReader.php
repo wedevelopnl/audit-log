@@ -44,12 +44,22 @@ final readonly class DoctrineRecordReader implements RecordReader
     #[Override]
     public function actors(): array
     {
+        // Each actor's most recent record: no later record by the same actor
+        // exists, with the id breaking ties within one instant.
+        $later = $this->entityManager->createQueryBuilder()
+            ->select('l.id')
+            ->from(AuditRecordEntity::class, 'l')
+            ->where('l.actorId = r.actorId')
+            ->andWhere('l.occurredAt > r.occurredAt OR (l.occurredAt = r.occurredAt AND l.id > r.id)');
+
+        $qb = $this->entityManager->createQueryBuilder();
+
         /** @var list<array{id: string, label: string|null}> $rows */
-        $rows = $this->entityManager->createQueryBuilder()
+        $rows = $qb
             ->from(AuditRecordEntity::class, 'r')
-            ->select('r.actorId AS id', 'MAX(r.actorLabel) AS label')
+            ->select('r.actorId AS id', 'r.actorLabel AS label')
             ->where('r.actorId IS NOT NULL')
-            ->groupBy('r.actorId')
+            ->andWhere($qb->expr()->not($qb->expr()->exists($later->getDQL())))
             ->orderBy('label', 'ASC')
             ->getQuery()
             ->getResult();
