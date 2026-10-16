@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace WeDevelop\AuditLog\Infrastructure\Symfony;
+namespace WeDevelop\AuditLog\Recording;
 
 use Override;
 use WeDevelop\AuditLog\Event\Subject;
-use WeDevelop\AuditLog\Recording\SubjectLabeller;
 
 /**
  * Default labeller: no label. There is no generic way to label an arbitrary
