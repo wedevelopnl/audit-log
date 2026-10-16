@@ -15,7 +15,7 @@ Doctrine ([ADR-0009](docs/adr/0009-symfony-bundle-packaging.md)).
 ## Requirements
 
 - PHP 8.5+
-- Symfony 8.0 (`framework-bundle`, `security-core`, `translation`, and the components
+- Symfony 8.x (`framework-bundle`, `security-core`, `translation`, and the components
   pulled in transitively)
 - Doctrine (`dbal` ^4, `orm` ^3.6, `doctrine-bundle` ^3.2)
 
@@ -40,7 +40,7 @@ append-only database grant, and the services you must provide.
 
 ## Design
 
-Three responsibilities are deliberately separated:
+Four responsibilities are deliberately separated:
 
 | Responsibility | Type | Concern |
 | --- | --- | --- |
