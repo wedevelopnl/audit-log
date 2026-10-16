@@ -6,12 +6,14 @@ namespace WeDevelop\AuditLog\Tests\Recording;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use WeDevelop\AuditLog\Event\AuditChannel;
 use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\FieldChange;
+use WeDevelop\AuditLog\Event\JsonEncodable;
 use WeDevelop\AuditLog\Event\RenderLine;
 use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Event\Subject;
@@ -19,6 +21,7 @@ use WeDevelop\AuditLog\Recording\Actor;
 use WeDevelop\AuditLog\Recording\DefaultRecorder;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Recording\Origin;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\DataCarryingEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\MinimalAuditEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserDeletedEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserPasswordChangedEvent;
@@ -30,6 +33,8 @@ use WeDevelop\AuditLog\Tests\Support\StubIdentityGenerator;
 use WeDevelop\AuditLog\Tests\Support\StubOriginResolver;
 use WeDevelop\AuditLog\Tests\Support\StubSubjectLabeller;
 
+use const INF;
+
 #[CoversClass(DefaultRecorder::class)]
 #[CoversClass(NewAuditRecord::class)]
 #[CoversClass(Actor::class)]
@@ -39,6 +44,7 @@ use WeDevelop\AuditLog\Tests\Support\StubSubjectLabeller;
 #[CoversClass(FieldChange::class)]
 #[CoversClass(RenderPayload::class)]
 #[CoversClass(RenderLine::class)]
+#[CoversClass(JsonEncodable::class)]
 final class DefaultRecorderTest extends TestCase
 {
     public function testFreezesEveryStrandOfTheMomentIntoTheStoredRecord(): void
@@ -99,6 +105,30 @@ final class DefaultRecorderTest extends TestCase
         self::assertTrue($field->redacted);
         self::assertNull($field->old);
         self::assertNull($field->new);
+    }
+
+    public function testFreezesTheEventData(): void
+    {
+        $store = new InMemoryRecordStore();
+        $this->recorder($store, null, null, new Origin(AuditChannel::Job, null), 'rec-5')
+            ->record(new DataCarryingEvent(['invoice' => 'INV-9', 'amount' => 12.5]));
+
+        self::assertSame(['invoice' => 'INV-9', 'amount' => 12.5], $store->records[0]->data);
+    }
+
+    public function testRejectsDataJsonCannotEncodeBeforeAnythingIsStored(): void
+    {
+        $store = new InMemoryRecordStore();
+        $recorder = $this->recorder($store, null, null, new Origin(AuditChannel::Job, null), 'rec-6');
+
+        try {
+            $recorder->record(new DataCarryingEvent(['amount' => INF]));
+            self::fail('Expected the recorder to reject data that cannot be stored as JSON.');
+        } catch (InvalidArgumentException $e) {
+            self::assertSame('Audit event "invoice.paid" data must be JSON-encodable: Inf and NaN cannot be JSON encoded.', $e->getMessage());
+        }
+
+        self::assertSame([], $store->records);
     }
 
     private function recorder(
