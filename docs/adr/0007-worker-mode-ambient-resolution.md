@@ -13,7 +13,8 @@ long-lived singletons reused across many requests.
 The recorder, resolvers, store, and reader MUST be stateless and hold no mutable
 shared or static state. Resolvers MUST read ambient request state (principal,
 request, IP) live at call time and MUST NOT capture it at construction. Worker
-safety MUST be enforced in CI (Igor) once the Symfony bridge exists.
+safety MUST be enforced in CI with Igor (`composer igor`); accepted findings are
+listed and justified in `igor-baseline.md`.
 
 ## Consequences
 

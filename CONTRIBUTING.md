@@ -19,7 +19,9 @@ composer cs-check      # coding standards (PHP CS Fixer)
 composer phpstan       # static analysis (level max + 100% type coverage)
 composer rector-check  # ensures #[\Override] attributes are present
 composer deptrac       # architecture boundaries
+composer igor          # worker-mode safety (see igor-baseline.md)
 composer test          # PHPUnit
+composer infection     # mutation testing, MSI >= 95% (slow; needs Xdebug)
 ```
 
 Convenience: `composer cs-fix` applies coding-standard fixes.
@@ -31,7 +33,7 @@ Convenience: `composer cs-fix` applies coding-standard fixes.
   them, not with tautological assertions.
 - **Architecture boundaries** are enforced by Deptrac: `Event` depends on nothing;
   `Record` and `Recording` may depend on `Event`; `Reading` may depend on `Event` and
-  `Record`. The core must never depend on framework bridges.
+  `Record`. The core must never depend on the framework adapters in `Infrastructure/`.
 - **Stable action codes.** A record's action is a stable, append-only string code
   (e.g. `user.deleted`) — never a class-string. Once shipped, a code is never
   repurposed.
