@@ -12,9 +12,12 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
+use WeDevelop\AuditLog\Event\RenderLine;
+use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\AuditRecordEntity;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\UnflushedRecordWarner;
 use WeDevelop\AuditLog\Reading\AuditQuery;
+use WeDevelop\AuditLog\Reading\AuditRenderer;
 use WeDevelop\AuditLog\Reading\RecordReader;
 use WeDevelop\AuditLog\Recording\Recorder;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserDeletedEvent;
@@ -85,6 +88,19 @@ final class AuditLogBundleTest extends KernelTestCase
         $roleChanged = $roleChangedEntries[0];
         self::assertNull($roleChanged->subjectLabel); // NullSubjectLabeller returned null
         self::assertSame('role', $roleChanged->changes?->fields[0]->field);
+    }
+
+    public function testRendersThroughTheTranslatorInTheDefaultAuditDomain(): void
+    {
+        self::bootKernel();
+
+        /** @var AuditRenderer $renderer */
+        $renderer = self::getContainer()->get('test.renderer');
+
+        self::assertSame(
+            'Deleted jan@example.com',
+            $renderer->renderMessage(new RenderPayload(new RenderLine('user.deleted', ['%email%' => 'jan@example.com'])), 'en'),
+        );
     }
 
     public function testListensForUnflushedRecordsOnBothTerminateEvents(): void
