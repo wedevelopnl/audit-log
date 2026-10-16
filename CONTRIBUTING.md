@@ -44,4 +44,12 @@ Convenience: `composer cs-fix` applies coding-standard fixes.
 
 ## Pull requests
 
-Open a PR against `main`. CI (the `QA` workflow) must be green before review.
+Open a PR against `main`. CI (the `QA` workflow) must be green before review. Add a
+line under `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md) for every user-facing
+change, and list any change to the `audit_record` table under **Schema**.
+
+## Releases
+
+Versions follow Semantic Versioning. A schema change or a renamed public class is a
+breaking change after 6.0.0; shipped action codes never change meaning. To release,
+rename `[Unreleased]` to the version and date, then tag that commit.
