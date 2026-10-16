@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WeDevelop\AuditLog\Tests\Infrastructure\Doctrine;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Override;
@@ -13,6 +14,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use WeDevelop\AuditLog\Event\AuditChannel;
+use WeDevelop\AuditLog\Event\Changeset;
+use WeDevelop\AuditLog\Event\FieldChange;
 use WeDevelop\AuditLog\Event\RenderLine;
 use WeDevelop\AuditLog\Event\RenderPayload;
 use WeDevelop\AuditLog\Infrastructure\Doctrine\DoctrineRecordReader;
@@ -65,6 +68,47 @@ final class DoctrineRecordReaderTest extends TestCase
         // The reader returns detached DTOs, never the EM-managed entity, so the
         // result carries no persistence handle out of the read boundary.
         self::assertFalse($this->em->contains($page->entries[0]));
+    }
+
+    public function testReadsBackEveryFieldOfAStoredRecord(): void
+    {
+        $id = '0190a8e0-0001-7000-8000-000000000001';
+        $this->store->add(new NewAuditRecord(
+            id: $id,
+            code: 'user.role_changed',
+            channel: AuditChannel::Api,
+            occurredAt: new DateTimeImmutable('2026-05-30T10:00:00+00:00'),
+            actorId: 'actor-1',
+            actorLabel: 'Jan',
+            subjectClass: stdClass::class,
+            subjectId: 'user-1',
+            subjectLabel: 'ana@example.com',
+            ipAddress: '203.0.113.7',
+            changes: new Changeset(FieldChange::of('role', 'member', 'admin'), FieldChange::redacted('password')),
+            data: ['ticket' => 42],
+            render: new RenderPayload(new RenderLine('user.role_changed', ['to' => 'admin']), [new RenderLine('note')]),
+        ));
+        $this->em->flush();
+        // Read from the database, not the identity map.
+        $this->em->clear();
+
+        $page = $this->reader->page(new AuditQuery());
+        self::assertCount(1, $page->entries);
+        $entry = $page->entries[0];
+
+        self::assertSame($id, $entry->id);
+        self::assertSame('user.role_changed', $entry->code);
+        self::assertSame(AuditChannel::Api, $entry->channel);
+        self::assertSame('2026-05-30T10:00:00+00:00', $entry->occurredAt->format(DateTimeInterface::ATOM));
+        self::assertSame('actor-1', $entry->actorId);
+        self::assertSame('Jan', $entry->actorLabel);
+        self::assertSame(stdClass::class, $entry->subjectClass);
+        self::assertSame('user-1', $entry->subjectId);
+        self::assertSame('ana@example.com', $entry->subjectLabel);
+        self::assertSame('203.0.113.7', $entry->ipAddress);
+        self::assertEquals(new Changeset(FieldChange::of('role', 'member', 'admin'), FieldChange::redacted('password')), $entry->changes);
+        self::assertSame(['ticket' => 42], $entry->data);
+        self::assertEquals(new RenderPayload(new RenderLine('user.role_changed', ['to' => 'admin']), [new RenderLine('note')]), $entry->render);
     }
 
     public function testPaginatesToTheSecondPageSkippingNewerEntries(): void
