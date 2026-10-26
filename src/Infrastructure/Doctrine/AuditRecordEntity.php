@@ -7,6 +7,7 @@ namespace WeDevelop\AuditLog\Infrastructure\Doctrine;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use WeDevelop\AuditLog\Event\AuditChannel;
 use WeDevelop\AuditLog\Event\Changeset;
 use WeDevelop\AuditLog\Event\RenderPayload;
@@ -33,43 +34,56 @@ class AuditRecordEntity implements AuditRecord
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::GUID)]
+    #[Override]
     public private(set) string $id;
 
     #[ORM\Column(type: Types::STRING)]
+    #[Override]
     public private(set) string $code;
 
     #[ORM\Column(type: Types::STRING, length: 16, enumType: AuditChannel::class)]
+    #[Override]
     public private(set) AuditChannel $channel;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Override]
     public private(set) DateTimeImmutable $occurredAt;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Override]
     public private(set) ?string $actorId;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Override]
     public private(set) ?string $actorLabel;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Override]
     public private(set) ?string $subjectClass;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Override]
     public private(set) ?string $subjectId;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    #[Override]
     public private(set) ?string $subjectLabel;
 
     #[ORM\Column(type: Types::STRING, length: 45, nullable: true)]
+    #[Override]
     public private(set) ?string $ipAddress;
 
     #[ORM\Column(type: ChangesetType::NAME, nullable: true)]
+    #[Override]
     public private(set) ?Changeset $changes;
 
     /** @var array<string, mixed>|null */
     #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Override]
     public private(set) ?array $data;
 
     #[ORM\Column(type: RenderPayloadType::NAME)]
+    #[Override]
     public private(set) RenderPayload $render;
 
     private function __construct()

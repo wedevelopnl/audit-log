@@ -16,8 +16,7 @@ Every change must pass the full pipeline before it is merged — this is what CI
 
 ```bash
 composer cs-check      # coding standards (PHP CS Fixer)
-composer phpstan       # static analysis (level max + 100% type coverage)
-composer rector-check  # ensures #[\Override] attributes are present
+composer phpstan       # static analysis (level max + 100% type coverage + #[\Override])
 composer deptrac       # architecture boundaries
 composer igor          # worker-mode safety (see igor-baseline.md)
 composer test          # PHPUnit
