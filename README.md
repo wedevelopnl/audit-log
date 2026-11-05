@@ -109,6 +109,11 @@ transaction as the change it describes. Record **before** that flush. A record m
 after the last flush of a request or command is never written; the bundle logs an
 error when that happens ([ADR-0010](docs/adr/0010-records-commit-with-the-callers-flush.md)).
 
+An act carried out away from the request that decided it, such as in a Messenger
+handler, has no principal or request to resolve. Its event can carry the actor and
+origin captured at dispatch through `ProvidesActor` and `ProvidesOrigin`; see
+[Recording away from the request](docs/installation.md#recording-away-from-the-request).
+
 To attach human-readable subject labels, provide a `SubjectLabeller` (the default
 returns none); read the trail back through `RecordReader`. See
 [docs/installation.md](docs/installation.md) for wiring.
