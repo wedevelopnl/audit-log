@@ -6,3 +6,4 @@
 .php-cs-fixer.cache
 .deptrac.cache
 coverage.xml
+.storyflow/
