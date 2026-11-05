@@ -7,6 +7,8 @@ called out under **Schema**: each one needs a migration in the consuming applica
 
 ## [Unreleased]
 
+## [6.1.0] - 2026-11-05
+
 ### Added
 
 - `ProvidesActor` and `ProvidesOrigin` let an event carry the actor and origin
@@ -65,7 +67,8 @@ called out under **Schema**: each one needs a migration in the consuming applica
   (`AuditRecordEntity`, DBAL types, store and reader) and Symfony runtime adapters,
   pre-wired by `AuditLogBundle`.
 
-[Unreleased]: https://github.com/wedevelopnl/audit-log/compare/6.0.0...HEAD
+[Unreleased]: https://github.com/wedevelopnl/audit-log/compare/6.1.0...HEAD
+[6.1.0]: https://github.com/wedevelopnl/audit-log/compare/6.0.0...6.1.0
 [6.0.0]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.3...6.0.0
 [6.0.0-rc.3]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.2...6.0.0-rc.3
 [6.0.0-rc.2]: https://github.com/wedevelopnl/audit-log/compare/6.0.0-rc.1...6.0.0-rc.2
