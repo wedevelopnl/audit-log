@@ -7,6 +7,13 @@ called out under **Schema**: each one needs a migration in the consuming applica
 
 ## [Unreleased]
 
+### Added
+
+- `ProvidesActor` and `ProvidesOrigin` let an event carry the actor and origin
+  captured where the act was decided, replacing the resolvers when the act is
+  recorded elsewhere, such as in a Messenger handler
+  ([ADR-0011](docs/adr/0011-events-carry-the-actor-and-origin-of-a-deferred-act.md)).
+
 ## [6.0.0] - 2026-10-16
 
 ### Added

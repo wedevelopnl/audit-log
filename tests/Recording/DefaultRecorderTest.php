@@ -22,6 +22,7 @@ use WeDevelop\AuditLog\Recording\DefaultRecorder;
 use WeDevelop\AuditLog\Recording\NewAuditRecord;
 use WeDevelop\AuditLog\Recording\Origin;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\DataCarryingEvent;
+use WeDevelop\AuditLog\Tests\Fixtures\Event\DeferredAuditEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\MinimalAuditEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserDeletedEvent;
 use WeDevelop\AuditLog\Tests\Fixtures\Event\UserPasswordChangedEvent;
@@ -89,6 +90,32 @@ final class DefaultRecorderTest extends TestCase
             ->record(new UserDeletedEvent('user-1', 'jan@example.com'));
 
         self::assertSame('jan@example.com', $store->records[0]->subjectLabel);
+        self::assertNull($store->records[0]->actorId);
+        self::assertNull($store->records[0]->actorLabel);
+    }
+
+    public function testEventProvidedActorAndOriginReplaceTheResolvers(): void
+    {
+        $store = new InMemoryRecordStore();
+        $this->recorder($store, new Actor('SHOULD-NOT-BE-USED', 'Nobody'), null, new Origin(AuditChannel::Console, null), 'rec-7')
+            ->record(new DeferredAuditEvent(
+                new Actor('machine:example-producer', 'Example producer'),
+                new Origin(AuditChannel::Webhook, '203.0.113.7'),
+            ));
+
+        $record = $store->records[0];
+        self::assertSame('machine:example-producer', $record->actorId);
+        self::assertSame('Example producer', $record->actorLabel);
+        self::assertSame(AuditChannel::Webhook, $record->channel);
+        self::assertSame('203.0.113.7', $record->ipAddress);
+    }
+
+    public function testAnEventProvidingNoActorIsRecordedWithoutOneEvenWhenAPrincipalResolves(): void
+    {
+        $store = new InMemoryRecordStore();
+        $this->recorder($store, new Actor('SHOULD-NOT-BE-USED', 'Nobody'), null, new Origin(AuditChannel::Ui, null), 'rec-8')
+            ->record(new DeferredAuditEvent(null, new Origin(AuditChannel::Job, null)));
+
         self::assertNull($store->records[0]->actorId);
         self::assertNull($store->records[0]->actorLabel);
     }

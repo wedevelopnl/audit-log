@@ -93,6 +93,65 @@ and are lost.`, with the action codes in the context) on `kernel.terminate` and
 handler, record before the handler's flush; worker message boundaries are not
 watched. See [ADR-0010](adr/0010-records-commit-with-the-callers-flush.md).
 
+## Recording away from the request
+
+The default resolvers read the security token and the current request when
+`record()` is called. Where neither exists — a console command, a Messenger
+handler, an anonymous request — the record gets no actor, and outside a request
+the `console` channel. For a console command or an anonymous visitor that is the
+truth. For work a request dispatched to a worker it is not: the act was decided by
+whoever made that request.
+
+Capture the actor and origin while the request is still current, carry them on the
+message, and let the event provide them. An event implementing `ProvidesActor` or
+`ProvidesOrigin` replaces the matching resolver
+([ADR-0011](adr/0011-events-carry-the-actor-and-origin-of-a-deferred-act.md)):
+
+```php
+// In the controller or webhook endpoint
+$bus->dispatch(new ImportFeed($runId, $actorResolver->resolve(), $originResolver->resolve()));
+
+// The event
+final readonly class FeedImported extends AbstractAuditEvent implements ProvidesActor, ProvidesOrigin
+{
+    public function __construct(
+        private string $runId,
+        private ?Actor $actor,
+        private Origin $origin,
+    ) {
+    }
+
+    public function code(): string
+    {
+        return 'feed.imported';
+    }
+
+    public function actor(): ?Actor
+    {
+        return $this->actor;
+    }
+
+    public function origin(): Origin
+    {
+        return $this->origin;
+    }
+}
+
+// In the message handler
+$recorder->record(new FeedImported($message->runId, $message->actor, $message->origin));
+$entityManager->flush();
+```
+
+Take the actor from the authenticated principal, never from the request body: the
+recorder stores whatever the event returns. To record the dispatching request
+under another channel, build the origin yourself, e.g.
+`new Origin(AuditChannel::Webhook, $origin->ipAddress)`.
+
+A machine caller authenticated through a Symfony authenticator resolves like a
+user: `SecurityActorResolver` uses its user identifier for both id and label. The
+trail stores no actor kind, so give such principals an identifier that reads as a
+machine, such as `machine:billing-sync`.
+
 ## Configuration
 
 ```yaml

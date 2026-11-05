@@ -34,8 +34,8 @@ final readonly class DefaultRecorder implements Recorder
         $label = $event instanceof ProvidesSubjectLabel
             ? $event->subjectLabel()
             : $this->labeller->label($subject);
-        $actor = $this->actors->resolve();
-        $origin = $this->origin->resolve();
+        $actor = $event instanceof ProvidesActor ? $event->actor() : $this->actors->resolve();
+        $origin = $event instanceof ProvidesOrigin ? $event->origin() : $this->origin->resolve();
 
         $this->store->add(new NewAuditRecord(
             id: $this->ids->next(),
